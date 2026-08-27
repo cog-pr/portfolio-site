@@ -41,6 +41,15 @@ jobs:
       # サブセット結果（フォントと unicode-range）もビルドで再生成される。
       # コンテンツを足したのに fonts:subset を回し忘れた場合、
       # コミット済みのフォントは字形が欠けたままになるのでここで揃える。
+      #
+      # コミットメッセージに [skip ci] を付けないこと。
+      #
+      # このマーカーは GitHub Actions のループ防止のつもりで付いていたが、
+      # そもそも GITHUB_TOKEN による push は仕様上ワークフローを起動しないため
+      # 不要だった。一方 Cloudflare Workers Builds はこのマーカーを読んで
+      # デプロイを止める。結果、main へマージしても本番に反映されない事故が起きた
+      # （2026-08-27: PR #22 のマージ後、Workers Builds が skipped のまま
+      #  本番が旧版を配信し続けた）。
       - name: Commit regenerated artifacts
         if: github.event_name == 'push'
         run: |
@@ -52,5 +61,5 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add $paths
-          git commit -m "chore: update metrics and font subsets [skip ci]"
+          git commit -m "chore: update metrics and font subsets"
           git push

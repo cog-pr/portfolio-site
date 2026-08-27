@@ -1,7 +1,7 @@
 ---
 import { Image } from 'astro:assets';
 import icon from '../../assets/mawo_icon.png';
-import { AUTHOR } from '../../lib/site';
+import { AUTHOR, SOCIALS } from '../../lib/site';
 
 /*
   プロフィール。トップページの、ヒーローと成果物への入口の間に置く。
@@ -106,6 +106,29 @@ const skillGroups = [
           ))
         }
       </dl>
+
+      {/*
+        アカウント。フッターにも同じものを出しているが、あちらは
+        ページ最下部にしかない。ABOUT を読んだ人がその場で辿れるよう、
+        自己紹介の終わりにも置く。
+
+        rel="me" を付けているのは、構造化データの sameAs と相互に
+        指し合う形にして本人性の裏付けにするため（仕様書 §11）。
+      */}
+      <div class="profile__links">
+        <p class="profile__links-label font-mono">LINKS</p>
+        <ul class="font-mono">
+          {
+            SOCIALS.map((s) => (
+              <li>
+                <a href={s.href} rel="me noopener noreferrer" target="_blank">
+                  {s.label}
+                </a>
+              </li>
+            ))
+          }
+        </ul>
+      </div>
     </div>
   </div>
 </section>
@@ -247,7 +270,8 @@ const skillGroups = [
       margin-top: var(--space-4);
     }
 
-    .profile__skills dt {
+    .profile__skills dt,
+    .profile__links-label {
       color: var(--c-dust);
       font-size: var(--fs-caption);
       letter-spacing: 0.16em;
@@ -259,12 +283,56 @@ const skillGroups = [
       margin-left: 0;
     }
 
-    .profile__skills ul {
+    .profile__skills ul,
+    .profile__links ul {
       display: flex;
       flex-wrap: wrap;
       gap: var(--space-1) var(--space-2);
       font-size: var(--fs-small);
       color: var(--c-fluorescent);
+    }
+
+    /* --- アカウント --- */
+    .profile__links {
+      margin-top: var(--space-3);
+    }
+
+    .profile__links a {
+      display: flex;
+      align-items: center;
+      gap: 0.5em;
+      color: var(--c-fluorescent);
+    }
+
+    /*
+      スキルと同じ「灯」を頭に置く。押せることを示すため、
+      こちらはホバーで灯が強くなる（点灯は速く、消灯は遅く — §3.3）。
+    */
+    .profile__links a::before {
+      content: '';
+      width: 5px;
+      height: 7px;
+      border-radius: 1px;
+      background: var(--c-facade-lit);
+      box-shadow: 0 0 8px -2px var(--c-signal);
+      transition:
+        background var(--dur-base) var(--ease-inout),
+        box-shadow var(--dur-base) var(--ease-inout);
+    }
+
+    .profile__links a:hover::before,
+    .profile__links a:focus-visible::before {
+      background: var(--neon-cyan-core);
+      box-shadow: 0 0 10px -1px var(--neon-cyan);
+      transition:
+        background var(--dur-fast) var(--ease-out),
+        box-shadow var(--dur-fast) var(--ease-out);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .profile__links a::before {
+        transition: none;
+      }
     }
 
     /* 技術名の頭に灯を1つ。窓明かりの見立てを小さく反復させる */

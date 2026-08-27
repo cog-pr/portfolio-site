@@ -1,13 +1,10 @@
 ---
-import { AUTHOR } from '../../lib/site';
+import { AUTHOR, SOCIALS, CONTACT_EMAIL } from '../../lib/site';
 
-// 連絡先。表示文字列とmailtoを二重に書くとズレるので一箇所で持つ。
-const contactEmail = 'contact@mawo.dev';
-
-const socials = [
-  { href: 'https://github.com/cog-pr', label: 'GitHub' },
-  { href: 'https://x.com/cog__pr', label: 'X' },
-];
+// 連絡先とアカウントは src/lib/site.ts が唯一の出所。
+// 表示文字列とmailto、構造化データの sameAs がズレないようにするため。
+const contactEmail = CONTACT_EMAIL;
+const socials = SOCIALS;
 ---
 
 <footer class="site-footer">

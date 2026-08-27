@@ -1,4 +1,6 @@
 ---
+import { SOCIALS, CONTACT_EMAIL } from '../../lib/site';
+
 /*
   ヘッダーとハンバーガーメニュー。
 
@@ -32,11 +34,8 @@ const links = [
 const here = Astro.url.pathname.replace(/\/+$/, '') || '/';
 const isCurrent = (href: string) => (href.replace(/\/+$/, '') || '/') === here;
 
-const socials = [
-  { href: 'https://github.com/cog-pr', label: 'GitHub' },
-  { href: 'https://x.com/cog__pr', label: 'X' },
-  { href: 'mailto:contact@mawo.dev', label: 'CONTACT' },
-];
+// アカウントは src/lib/site.ts が唯一の出所。メニューには連絡先も並べる。
+const socials = [...SOCIALS, { href: `mailto:${CONTACT_EMAIL}`, label: 'CONTACT' }];
 ---
 
 <header class="site-header">

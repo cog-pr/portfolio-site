@@ -14,7 +14,7 @@ import '../styles/neon.css';
 import { ClientRouter } from 'astro:transitions';
 import Header from '../components/layout/Header.astro';
 import Footer from '../components/layout/Footer.astro';
-import { SITE_NAME, AUTHOR } from '../lib/site';
+import { SITE_NAME, AUTHOR, SOCIALS, CONTACT_EMAIL } from '../lib/site';
 
 interface Props {
   title: string;
@@ -79,8 +79,8 @@ const jsonLd = {
       name: AUTHOR.jpPlain,
       alternateName: [AUTHOR.en, AUTHOR.handleJp, AUTHOR.handleEn],
       url: siteUrl,
-      email: 'mailto:contact@mawo.dev',
-      sameAs: ['https://github.com/cog-pr', 'https://x.com/cog__pr'],
+      email: `mailto:${CONTACT_EMAIL}`,
+      sameAs: SOCIALS.map((s) => s.href),
     },
     {
       '@type': 'WebSite',

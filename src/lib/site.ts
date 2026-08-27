@@ -38,3 +38,20 @@ export const AUTHOR = {
   */
   handleEn: 'Mawo',
 } as const;
+
+/*
+  連絡先とアカウント。
+
+  ヘッダーのメニュー・フッター・プロフィール・構造化データの sameAs で使う。
+  同じURLを4箇所に書くと、アカウントを移したときに直し漏れが出る。
+  構造化データは「この4つは同一人物のものだ」という宣言なので（仕様書 §11）、
+  表示とズレると宣言そのものが嘘になる。
+
+  rel="me" を付けて出すこと。相互に指し合う形にすると本人性の裏付けになる。
+*/
+export const CONTACT_EMAIL = 'contact@mawo.dev';
+
+export const SOCIALS = [
+  { label: 'GitHub', href: 'https://github.com/cog-pr' },
+  { label: 'X', href: 'https://x.com/cog__pr' },
+] as const;

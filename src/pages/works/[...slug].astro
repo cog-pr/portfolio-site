@@ -103,6 +103,17 @@ const { Content } = await render(entry);
     .work__title {
       font-size: var(--fs-h1);
       color: var(--c-fluorescent);
+      /*
+        h1 はブラウザ既定で太字になる。作品名が和文だと weight 700 の
+        和文フェイス（ZenKakuGothicNew-Bold / 36KB）を要求してしまい、
+        実測で CI の LCP が 1953→2104ms、予算 2000ms を割った。
+
+        400 にしても欧文の見た目は変わらない。Archivo は @font-face を
+        font-weight: 400 700 で宣言した wght 700 の静的インスタンス1本なので、
+        400 を要求しても同じファイルが使われる。
+        一覧の看板（.sign__title / span）も 400 なので、そちらとも揃う。
+      */
+      font-weight: 400;
     }
 
     .work__title-jp {

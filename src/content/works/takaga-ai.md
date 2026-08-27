@@ -1,6 +1,5 @@
 ---
 title: "たかがAI、されどAI。"
-titleEn: "Takaga AI"
 year: 2026
 roles: ["PM", "設計", "実装"]
 stack: ["TypeScript", "React", "Hono", "Cloudflare Workers", "WebSocket", "OpenAI API"]

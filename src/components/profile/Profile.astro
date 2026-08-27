@@ -123,6 +123,7 @@ const skillGroups = [
               <li>
                 <a href={s.href} rel="me noopener noreferrer" target="_blank">
                   {s.label}
+                  <span class="profile__links-out" aria-hidden="true">&#8599;</span>
                 </a>
               </li>
             ))
@@ -297,40 +298,38 @@ const skillGroups = [
       margin-top: var(--space-3);
     }
 
-    .profile__links a {
-      display: flex;
-      align-items: center;
-      gap: 0.5em;
-      color: var(--c-fluorescent);
-    }
-
     /*
-      スキルと同じ「灯」を頭に置く。押せることを示すため、
-      こちらはホバーで灯が強くなる（点灯は速く、消灯は遅く — §3.3）。
+      スキルの「灯」は使わない。あちらは押せない項目なので、
+      同じ形にすると押せるかどうかが見た目で区別できなくなる
+      （ホバーでしか差が出ず、タッチ端末では触るまで分からない）。
+
+      作品詳細ページの外部リンク（.work__links）と同じ書き方に揃える。
+      枠で囲み、末尾に ↗ を出すのがこのサイトでの「外へ出る」印。
     */
-    .profile__links a::before {
-      content: '';
-      width: 5px;
-      height: 7px;
-      border-radius: 1px;
-      background: var(--c-facade-lit);
-      box-shadow: 0 0 8px -2px var(--c-signal);
-      transition:
-        background var(--dur-base) var(--ease-inout),
-        box-shadow var(--dur-base) var(--ease-inout);
+    .profile__links a {
+      display: inline-flex;
+      align-items: baseline;
+      gap: 0.4em;
+      padding: 0.3em 0.7em;
+      color: var(--c-fluorescent);
+      border: 1px solid var(--c-facade-lit);
+      border-radius: var(--radius-button);
+      transition: border-color var(--dur-base) var(--ease-inout);
     }
 
-    .profile__links a:hover::before,
-    .profile__links a:focus-visible::before {
-      background: var(--neon-cyan-core);
-      box-shadow: 0 0 10px -1px var(--neon-cyan);
-      transition:
-        background var(--dur-fast) var(--ease-out),
-        box-shadow var(--dur-fast) var(--ease-out);
+    .profile__links a:hover,
+    .profile__links a:focus-visible {
+      border-color: var(--c-signal);
+      transition: border-color var(--dur-fast) var(--ease-out);
+    }
+
+    .profile__links-out {
+      color: var(--c-dust);
+      font-size: 0.9em;
     }
 
     @media (prefers-reduced-motion: reduce) {
-      .profile__links a::before {
+      .profile__links a {
         transition: none;
       }
     }

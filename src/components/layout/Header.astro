@@ -1,5 +1,5 @@
 ---
-import { SOCIALS, CONTACT_EMAIL } from '../../lib/site';
+import { SITE_NAME, SOCIALS, CONTACT_EMAIL } from '../../lib/site';
 
 /*
   ヘッダーとハンバーガーメニュー。
@@ -39,7 +39,7 @@ const socials = [...SOCIALS, { href: `mailto:${CONTACT_EMAIL}`, label: 'CONTACT'
 ---
 
 <header class="site-header">
-  <a href="/" class="site-header__mark font-mono">WINDOWS AT NIGHT</a>
+  <a href="/" class="site-header__mark font-mono">{SITE_NAME}</a>
 
   <details class="menu" data-menu>
     <summary class="menu__button" aria-label="メニューを開く">

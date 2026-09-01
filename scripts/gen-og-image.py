@@ -94,8 +94,8 @@ def main() -> None:
     mono = ImageFont.truetype(str(ROOT / "fonts-src" / "IBMPlexMono-Regular.ttf"), 30)
 
     x = 72
-    draw.text((x, 214), "WINDOWS", font=title, fill=C_FLUORESCENT)
-    draw.text((x, 322), "AT NIGHT", font=title, fill=C_FLUORESCENT)
+    draw.text((x, 214), "Mawo's", font=title, fill=C_FLUORESCENT)
+    draw.text((x, 322), "Portfolio", font=title, fill=C_FLUORESCENT)
     draw.text((x, 452), "Developer / ML Engineer", font=mono, fill=C_DUST)
 
     # 中身は写真なので JPEG。PNG だと同じ絵で4倍以上重くなる。

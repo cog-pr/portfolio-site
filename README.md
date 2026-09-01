@@ -298,7 +298,9 @@ npx wrangler deploy
 公開URL: **https://mawo.dev**
 
 Worker のカスタムドメインとして設定しています（DNSレコードと証明書は Cloudflare が自動発行）。
-`*.workers.dev` のURLも生きていますが、正規URLは `mawo.dev` です。
+公開URLはこれ1つだけです。`*.workers.dev` のURLは `wrangler.jsonc` の `workers_dev: false`
+で塞いでいます（同じ中身が2つのURLで配信され、検索エンジンに別サイトとして拾われたため）。
+PRごとのプレビューURLは `preview_urls: true` で残しています。
 
 > **配信先を変えたら `astro.config.mjs` の `site` を直してください。**
 > この値は canonical、OGPの画像URL、sitemap の各URLの基準になっているため、

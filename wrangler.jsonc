@@ -18,6 +18,23 @@
   // 上げるときは wrangler も一緒に更新する。
   "compatibility_date": "2026-08-08",
 
+  /*
+    公開URLは mawo.dev だけにする。
+
+    既定では Cloudflare が自動で割り当てる mawo-dev.trco0430.workers.dev でも
+    同じサイトが配信される。canonical は mawo.dev を指しているが、実体が
+    別URLで見えている以上は検索側に別サイトとして拾われうる（実際に拾われた）。
+    正規URLを1つに保つため、ここで塞ぐ。
+  */
+  "workers_dev": false,
+
+  /*
+    preview_urls の既定値は workers_dev に追従する。つまり上を false にすると
+    PRごとの一時URL（<version>-mawo-dev.*.workers.dev）まで一緒に消える。
+    こちらはマージ前に実物を確認するのに使うので、明示して残す。
+  */
+  "preview_urls": true,
+
   "assets": {
     "directory": "./dist/",
 

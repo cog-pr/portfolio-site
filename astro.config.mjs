@@ -8,7 +8,8 @@ export default defineConfig({
   // 実際に配信されているURLと一致していないと canonical がずれ、
   // SNSにリンクを貼ってもカードが正しく表示されない。
   //
-  // Worker には *.workers.dev のURLも生きているが、正規URLはこちら。
+  // 配信先はこの1つだけ。*.workers.dev のURLは wrangler.jsonc の
+  // workers_dev: false で塞いでいる（理由はそちらに記載）。
   // 配信先を変えるときは public/robots.txt の Sitemap 行も一緒に直すこと。
   site: 'https://mawo.dev',
 

@@ -9,15 +9,15 @@
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { prefersReducedMotion } from '../motion/motionGuard';
+import {
+  IGNITE_FLASH_DURATION,
+  IGNITE_FLASH_STRENGTH,
+  IGNITE_RESTING_STRENGTH,
+  IGNITE_SETTLE_DURATION,
+  IGNITE_STAGGER,
+} from './igniteConfig';
 
 gsap.registerPlugin(ScrollTrigger);
-
-const STAGGER = 0.09;
-const FLASH_DURATION = 0.14;
-const SETTLE_DURATION = 0.34;
-
-/** 静止状態（CSS側の既定値）と揃えること */
-const RESTING_STRENGTH = 0.5;
 
 export function initIgnite(): void {
   const list = document.querySelector<HTMLElement>('.works');
@@ -38,17 +38,17 @@ export function initIgnite(): void {
     onEnter: () => {
       titles.forEach((el, i) => {
         gsap
-          .timeline({ delay: i * STAGGER })
+          .timeline({ delay: i * IGNITE_STAGGER })
           // 一瞬フル点灯してから静止状態に落ち着く（蛍光灯が安定するまでの挙動）
           .set(el, { '--neon-strength': 0 })
           .to(el, {
-            '--neon-strength': 1.5,
-            duration: FLASH_DURATION,
+            '--neon-strength': IGNITE_FLASH_STRENGTH,
+            duration: IGNITE_FLASH_DURATION,
             ease: 'power2.out',
           })
           .to(el, {
-            '--neon-strength': RESTING_STRENGTH,
-            duration: SETTLE_DURATION,
+            '--neon-strength': IGNITE_RESTING_STRENGTH,
+            duration: IGNITE_SETTLE_DURATION,
             ease: 'power2.out',
             // アニメーション後はインラインstyleを外し、CSSの :hover に制御を戻す
             clearProps: '--neon-strength',

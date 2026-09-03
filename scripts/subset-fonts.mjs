@@ -132,7 +132,7 @@ const LATIN_TEXT =
   'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789' +
   " .,:;!?()[]{}'\"-–—/_+*&%$#@~^|\\<>=`ĀāĒēĪīŌōŪū";
 
-// core = トップページで必要な文字。ext = 残り全部（core と重複させない）。
+// core = 入口ページと明示指定された要素で必要な文字。ext = 残り全部（core と重複させない）。
 const uniq = (s) => [...new Set([...s])];
 const CORE_SET = uniq(coreText + BASELINE_JP + LATIN_TEXT).join('');
 const coreChars = new Set([...CORE_SET]);

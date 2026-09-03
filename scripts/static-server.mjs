@@ -1,6 +1,6 @@
 // 計測用の静的サーバー。
 //
-// `astro preview` は gzip を返さないが、本番（Cloudflare Pages）はテキスト資産を
+// `astro preview` は gzip を返さないが、本番（Cloudflare Workers Static Assets）はテキスト資産を
 // 必ず圧縮して配信する。非圧縮のまま計測すると HTML が実測の約5倍の転送量になり、
 // LCP を本番より悪く見積もってしまう。
 // 「このサイトについて」で公開する数値を本番と揃えるため、圧縮ありで配信する。

@@ -19,8 +19,8 @@ const PATHS = ['/', '/works/', '/about-this-site/', '/works/takaga-ai/'];
 
 /*
   LCP だけページごとに閾値が違う。lighthouserc.json の assertMatrix と揃えること。
-  「このサイトについて」は和文が多く、LCP要素の導入文がフォントの到着を待つため
-  2.25s 前後で頭打ちになる（仕様書 §8 の但し書きを参照）。
+  「このサイトについて」はHTML文書が大きく、simulated throttlingではFCPの到着が
+  支配的になるため 2.4s を上限にする（仕様書 §8 の但し書きを参照）。
 */
 const LCP_LIMITS = { '/about-this-site/': 2400 };
 const LCP_DEFAULT = 2000;

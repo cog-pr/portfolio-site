@@ -15,8 +15,8 @@ const renderedNotes = await Promise.all(
 const budgets = [
   { label: 'Performance', value: metrics.scores.performance, target: '95 以上', unit: '' },
   { label: 'Accessibility', value: metrics.scores.accessibility, target: '100', unit: '' },
-  { label: 'Best Practices', value: metrics.scores.bestPractices, target: '—', unit: '' },
-  { label: 'SEO', value: metrics.scores.seo, target: '—', unit: '' },
+  { label: 'Best Practices', value: metrics.scores.bestPractices, target: '100（警告）', unit: '' },
+  { label: 'SEO', value: metrics.scores.seo, target: '100（警告）', unit: '' },
 ];
 
 const vitals = [
@@ -27,12 +27,12 @@ const vitals = [
     target: '2.0s 以下',
   },
   { label: 'CLS', value: metrics.vitals.cls.toFixed(3), unit: '', target: '0.05 以下' },
-  { label: 'TBT', value: String(metrics.vitals.tbtMs), unit: 'ms', target: '—' },
+  { label: 'TBT', value: String(metrics.vitals.tbtMs), unit: 'ms', target: '200ms 以下' },
   {
     label: '初期JS (gzip)',
     value: (metrics.budget.initialJsGzipBytes / 1024).toFixed(1),
     unit: 'KB',
-    target: '30KB 以下',
+    target: '30KB 以下（設計）',
   },
   {
     label: 'フォント合計',
@@ -53,11 +53,11 @@ const stack = [
     items: [
       {
         name: 'Astro',
-        note: '明示的に指示しない限りJSを出力しない。演出過多なサイトほど、土台の出力JSは軽くあるべきだと考えた。',
+        note: '静的HTMLを先に出し、必要な演出だけをクライアント側へ載せる。作品と意思決定ログは Markdown の Content Collections として管理し、ビルド時に検証している。',
       },
       {
         name: 'TypeScript (strict)',
-        note: 'アイランドの中身も含めて型を通す。フレームワークのランタイムは載せない。',
+        note: '演出の中身まで型を通す。React / Vue などのUIランタイムは加えず、Astro コンポーネントと素の TypeScript で実装している。',
       },
     ],
   },
@@ -79,11 +79,11 @@ const stack = [
     items: [
       {
         name: 'GSAP + ScrollTrigger',
-        note: 'スクロール連動の点灯シーケンスと縦看板のパララックス。全て遅延ロードで、初期JSには含めない。',
+        note: '看板の点灯シーケンスと縦看板のパララックスに限定して使う。最初の操作か2.5秒経過まで取得を待ち、reduced-motion では取得しない。',
       },
       {
         name: 'OGL',
-        note: 'Three.js（約150KB）に対し約10KB。背景シェーダー1枚にしか使わないので軽さを優先した。',
+        note: '背景シェーダー1枚に必要な処理だけを扱える薄い WebGL ラッパー。GPUを使えない環境では初期化せず、CSSの背景を残す。',
       },
     ],
   },
@@ -92,11 +92,11 @@ const stack = [
     items: [
       {
         name: 'Cloudflare Workers (Static Assets)',
-        note: 'Worker スクリプトを持たないアセットのみの構成。Pages でも動くが、後から動的処理が必要になったときの移行コストをゼロにするため。',
+        note: 'Worker スクリプトを持たないアセットのみの構成。公開URLは mawo.dev に一本化し、PR用のプレビューURLだけを残している。',
       },
       {
         name: 'GitHub Actions + Lighthouse CI',
-        note: 'PRごとに計測し、予算を割ったらビルドを落とす。このページの数値もCIが自動で更新する。',
+        note: 'PRでは4ページを計測して予算を検証する。main 更新後はトップを再計測し、このページが読む実測値とフォントのサブセットを自動更新する。',
       },
     ],
   },
@@ -110,23 +110,23 @@ const stack = [
 const craft = [
   {
     title: '和文フォントを出力HTMLから逆算して切る',
-    body: 'サブセット対象の文字を、ソースコードではなくビルド後のHTMLから集めている。ソースを走査すると日本語のコード内コメントまで拾ってしまい、描画されない文字のために和文フォントが15KB太った。さらに Bold は見出しにしか使わないので、本文の文字を含めず見出しだけから抽出している（93KB→22.5KB）。',
+    body: 'サブセット対象の文字を、ソースコードではなくビルド後のHTMLから集めている。ソースを走査すると日本語のコード内コメントまで拾い、描画されない文字のためにフォントが太る。Bold も本文全体ではなく、見出し・strong・表見出しに実際に出る文字だけから毎回作り直す。',
   },
   {
     title: '和文をトップ用と残りに分割する',
-    body: 'サイト全体の和文を1ファイルにすると、トップページが「このサイトについて」の長文で使う文字まで読み込むことになる。unicode-range で core / ext に分け、トップは core だけで完結させた。分割の境界は実測で決めていて、広げるとトップのLCPが悪化する。',
+    body: 'サイト全体の和文を1ファイルにすると、入口ページが「このサイトについて」の長文で使う文字まで読み込む。unicode-range で core / ext に分け、トップと成果物一覧は core だけで完結させた。このページの導入文だけは明示的に core へ加える。境界を広げると入口のLCPが悪化するため、実測で範囲を決めている。',
   },
   {
     title: '欧文は1ウェイトに固定する',
     body: '可変フォントは便利だが、LCP要素の書体では話が別だった。wght 400-700 の可変で20.1KB、ウェイト別2ファイルではリクエストが1本増える。どちらもLCPを1.86s→2.10sまで悪化させたので、wdth 80 / wght 700 の単一インスタンス（9.3KB）に固定した。',
   },
   {
-    title: 'preload は1つだけに絞る',
-    body: 'ファーストビューの書体を全部 preload すると帯域を奪い合って逆効果になる。IBM Plex Mono を足したら最悪値が 1980ms → 2054ms に悪化した。LCP要素に使う Archivo だけを先読みしている。',
+    title: 'preload はページのLCP要素に絞る',
+    body: '書体を全部 preload すると帯域を奪い合って逆効果になる。共通では欧文見出し用の Archivo だけを先読みし、和文の導入文がLCPになるこのページだけ Zen Kaku Gothic New Regular を加えている。IBM Plex Mono は先読みしない。',
   },
   {
     title: 'アイランドの起動スクリプトを1本にまとめる',
-    body: 'コンポーネントごとに script を置くと、数百バイトのチャンクが別々のリクエストになる。初期ロードでフォントと帯域を奪い合い、LCPが約40ms悪化した。窓グリッド周りの3つのアイランドは1本のエントリから起動している（リクエスト4本→2本）。',
+    body: 'コンポーネントごとに script を置くと、小さなチャンクが別々のリクエストになる。成果物一覧では看板の点灯・光害の空・縦看板を1本の入口から起動し、GSAP と OGL は必要になった時点で動的 import する。さらに最初の操作か2.5秒経過まで観測自体を待ち、本文とフォントを先に配る。',
   },
   {
     title: 'GPUが無い環境では背景シェーダーを動かさない',
@@ -134,7 +134,7 @@ const craft = [
   },
   {
     title: '計測は本番と同じ圧縮条件で行う',
-    body: 'astro preview は無圧縮で配信するため、そのまま測ると本番より悪い数値が出る。Cloudflare は必ず圧縮するので、計測用に gzip 配信する静的サーバーを別に用意した。公開する数値は本番と同条件で測ったものにしている。',
+    body: 'astro preview は無圧縮で配信するため、そのまま測ると本番より悪い数値が出る。Workers Static Assets の圧縮あり配信に合わせ、計測用に gzip を返す静的サーバーを用意した。ローカルとCIで同じ条件を使う。',
   },
   {
     title: '窓グリッドをやめて看板にした',
@@ -169,7 +169,7 @@ const seo = [
         note: 'Person と WebSite を書き、sameAs で GitHub と X に紐付けた。書くのは名前・URL・アカウント・連絡先だけで、肩書きのような主観は入れない。',
       },
       {
-        name: 'sitemap.xml / robots.txt',
+        name: 'sitemap-index.xml / robots.txt',
         note: 'ビルド時に全ページのURLを列挙し、robots.txt からその場所を指している。',
       },
       {
@@ -179,6 +179,10 @@ const seo = [
       {
         name: 'JSなしで読める静的HTML',
         note: 'クローラーにはこれが最も確実な条件で、しかもSEOのために用意したものではない。演出を遅延ロードへ追い出した設計がそのまま効いている。',
+      },
+      {
+        name: '公開URLは mawo.dev のみ',
+        note: '自動割り当ての workers.dev URL は閉じ、同じ内容を別URLで配らない。マージ前に確認するためのPRプレビューだけは残している。',
       },
     ],
   },
@@ -206,13 +210,13 @@ const measuredAt = new Date(metrics.measuredAt).toLocaleString('ja-JP', {
 
 <Base
   title="About This Site"
-  description="このサイトの実測値と、採用しなかった選択肢を含む意思決定の記録。"
+  description="Mawo's Portfolio の現行構成、実測値、仕様変更を含む意思決定の記録。"
   preloadFonts={[
     /*
-      このページのLCP要素は導入文（和文）。トップとは違い、ここでは Archivo ではなく
-      和文が待ち時間を作っている（実測 FCP 1.5s → LCP 2.3s）。
-      導入文は data-font-core で core 側に寄せてあるので、core だけを先読みする。
-      ext まで足すと帯域を奪い合うだけで効かなかった（実測で変化なし）。
+      このページのLCP要素は導入文（和文）。data-font-core で core 側に寄せ、
+      ext の到着を待たせないため core だけを先読みする。
+      ただしページ全体のLCP例外はフォントではなくHTML文書量が原因なので、
+      ext まで先読みしても改善しない。
     */
     '/fonts/ZenKakuGothicNew-Regular.woff2',
   ]}
@@ -223,7 +227,7 @@ const measuredAt = new Date(metrics.measuredAt).toLocaleString('ja-JP', {
       {/* ファーストビューの和文。ext の到着を待たせないため core に含める（scripts/subset-fonts.mjs）*/}
       <p class="about__lead" data-font-core>
         派手な演出を持ちながら速度を落とさないこと自体が、このサイトの主張です。
-        主張である以上、数値と判断の根拠を公開します。
+        実装は変わり続けるため、現在の構成と変えた理由を、数値と一緒に公開します。
       </p>
     </header>
 
@@ -273,10 +277,12 @@ const measuredAt = new Date(metrics.measuredAt).toLocaleString('ja-JP', {
       </table>
 
       <p class="about__note">
-        これらの数値は手打ちではありません。ビルド時に Lighthouse を実行して
+        これらの数値は手打ちではありません。PRでは Lighthouse で予算を検証し、
+        main が更新されたときにトップページを再計測して
         <code class="font-mono">src/data/metrics.json</code>
-        に書き出し、このページはそれを読んでいます。手で書くと必ず陳腐化するためです。
-        上の数値はトップページの実測値です。
+        へ保存します。このページが表示するのは、その最新値です。
+        Performance・Accessibility・LCP・CLS・TBT・転送量はマージを止める基準、
+        Best Practices と SEO は警告として扱います。
       </p>
 
       {/*
@@ -288,7 +294,7 @@ const measuredAt = new Date(metrics.measuredAt).toLocaleString('ja-JP', {
         当初これを「和文フォントの到着待ち」と説明していましたが、<strong>誤りでした</strong>。
         FCP が 1.9s あり、LCP との差は 0.2s しかありません。効いているのは
         <strong>HTML 文書そのものの大きさ</strong>で、文章を足すとそのぶん素直に遅くなります。
-        preload もサブセットの切り分けも効かなかったのは、原因が別の場所にあったためです。
+        preload もサブセットの切り分けも、文書量のボトルネックには効きませんでした。
         内容を削れば通りますが、それはこのページの存在価値を削ることになるので、
         数値のほうを譲りました。CI ではこのページだけ 2.4s、他は 2.0s のまま判定しています。
       </p>
@@ -321,7 +327,7 @@ const measuredAt = new Date(metrics.measuredAt).toLocaleString('ja-JP', {
     <section class="about__section" aria-labelledby="craft-heading">
       <h2 id="craft-heading" class="about__heading">こだわりと工夫</h2>
       <p class="about__body">
-        実装中に実際に踏んだ問題と、その対処です。一般論ではなく、
+        現在の実装へ至るまでに実際に踏んだ問題と、その対処です。一般論ではなく、
         <strong>このサイトで測って決めたこと</strong>だけを載せています。
       </p>
 
@@ -380,9 +386,9 @@ const measuredAt = new Date(metrics.measuredAt).toLocaleString('ja-JP', {
     <section class="about__section" aria-labelledby="demo-heading">
       <h2 id="demo-heading" class="about__heading">演出の Before / After</h2>
       <p class="about__body">
-        成果物一覧の看板が点灯するシーケンスを、その場で操作できます。
-        <code class="font-mono">stagger</code>（セル間の遅延）と
-        <code class="font-mono">duration</code>（1セルあたりの尺）を変えると、
+        成果物一覧の看板が順に強く点灯し、微光へ落ち着くシーケンスを、その場で操作できます。
+        <code class="font-mono">stagger</code>（看板間の遅延）と
+        <code class="font-mono">duration</code>（1看板が点灯して落ち着くまでの合計尺）を変えると、
         同じ演出がどれだけ印象を変えるかが分かります。
       </p>
       <IgniteDemo />
@@ -445,7 +451,7 @@ const measuredAt = new Date(metrics.measuredAt).toLocaleString('ja-JP', {
 
 <script>
   // 意思決定ログは縦に長いため、エントリ単位で控えめにリビールする。
-  // 署名要素（窓グリッド）より目立たせないこと（§10）。
+  // 署名要素（成果物のネオン看板）より目立たせないこと（§10）。
   import { initReveal } from '../components/motion/reveal';
   initReveal('.log__entry');
 </script>

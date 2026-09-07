@@ -134,9 +134,10 @@ const jsonLd = {
       @font-face は（インライン化した）CSS内にしかないため、preload しないと
       CSSのパースが終わるまでフォント取得が始まらず、その分 LCP が遅れる。
 
-      先読みするのは LCP要素（ヒーローの大見出し）に使う Archivo だけにすること。
-      IBM Plex Mono や和文まで preload すると帯域を奪い合い、かえって LCP が悪化する
-      （実測: mono を足すと最悪値が 1980ms → 2054ms）。
+      共通で先読みするのは、欧文のLCP要素に使う Archivo だけ。
+      ページ固有のLCP要素に別の書体が必要なら preloadFonts で明示する。
+      IBM Plex Mono まで共通で足すと帯域を奪い合い、LCP が悪化した
+      （実測: 最悪値 1980ms → 2054ms）。
     */}
     <link
       rel="preload"

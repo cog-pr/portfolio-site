@@ -1,29 +1,49 @@
 ---
-// 演出のBefore/Afterデモ: 窓グリッドの点灯シーケンスの stagger / duration を
-// その場で変更して再生できる。このページ自体が作品である、という趣旨の実装（§5.3-3）。
-// セル配置はトップの窓グリッドと同じ決定論的な考え方で、ここでは固定パターンを使う。
-const DEMO_CELLS = [
-  1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 0, 0, 1, 0, 0, 1, 0, 1, 0, 0, 1, 0, 0, 1,
+import { getPublishedWorks } from '../../lib/works';
+import {
+  IGNITE_FLASH_DURATION,
+  IGNITE_SETTLE_DURATION,
+  IGNITE_STAGGER,
+  IGNITE_TOTAL_DURATION,
+} from './igniteConfig';
+
+// 成果物一覧と同じ順序・管色で、看板の点灯シーケンスを小さく再現する。
+const works = await getPublishedWorks();
+const TUBES = [
+  { hue: 'var(--neon-red)', core: 'var(--neon-red-core)' },
+  { hue: 'var(--neon-orange)', core: 'var(--neon-orange-core)' },
+  { hue: 'var(--neon-green)', core: 'var(--neon-green-core)' },
+  { hue: 'var(--neon-cyan)', core: 'var(--neon-cyan-core)' },
+  { hue: 'var(--neon-violet)', core: 'var(--neon-violet-core)' },
 ];
 ---
 
 <figure class="demo">
-  <div class="demo__grid" data-demo-grid>
+  <ol class="demo__signs" data-demo-signs aria-label="成果物の看板点灯順序" role="list">
     {
-      DEMO_CELLS.map((lit) =>
-        lit === 1 ? (
-          <span class="demo__cell demo__cell--lit" data-demo-cell></span>
-        ) : (
-          <span class="demo__cell"></span>
-        )
-      )
+      works.map((work, i) => {
+        const tube = TUBES[i % TUBES.length];
+        return (
+          <li
+            class="demo__sign"
+            style={`--neon-hue: ${tube.hue}; --neon-core: ${tube.core};`}
+          >
+            <span class="demo__sign-num font-mono" aria-hidden="true">
+              {String(i + 1).padStart(2, '0')}
+            </span>
+            <span class="demo__sign-title font-display neon" data-demo-sign-title>
+              {work.data.titleEn ?? work.data.title}
+            </span>
+          </li>
+        );
+      })
     }
-  </div>
+  </ol>
 
   <div class="demo__controls">
     <div class="demo__control">
       <label class="font-mono" for="demo-stagger">
-        stagger <output data-demo-out="stagger">0.04</output>s
+        stagger <output data-demo-out="stagger">{IGNITE_STAGGER.toFixed(2)}</output>s
       </label>
       <input
         id="demo-stagger"
@@ -31,34 +51,55 @@ const DEMO_CELLS = [
         min="0"
         max="0.2"
         step="0.01"
-        value="0.04"
+        value={IGNITE_STAGGER.toFixed(2)}
         data-demo-input="stagger"
+        aria-describedby="demo-caption"
       />
     </div>
 
     <div class="demo__control">
       <label class="font-mono" for="demo-duration">
-        duration <output data-demo-out="duration">0.30</output>s
+        duration <output data-demo-out="duration">{IGNITE_TOTAL_DURATION.toFixed(2)}</output>s
       </label>
       <input
         id="demo-duration"
         type="range"
         min="0.05"
         max="1.2"
-        step="0.05"
-        value="0.3"
+        step="0.01"
+        value={IGNITE_TOTAL_DURATION.toFixed(2)}
         data-demo-input="duration"
+        aria-describedby="demo-caption"
       />
     </div>
 
-    <button type="button" class="demo__replay font-mono" data-demo-replay>
+    <button
+      type="button"
+      class="demo__replay font-mono"
+      data-demo-replay
+      aria-describedby="demo-caption"
+    >
       REPLAY
     </button>
   </div>
 
-  <figcaption class="demo__caption font-mono">
-    実際に成果物一覧で使っている値は stagger 0.09s / duration 0.34s。
-    大きくすると「点灯していく過程」が主役になりすぎ、看板そのものが待たされる。
+  <p
+    id="demo-motion-status"
+    class="demo__motion-status font-mono"
+    data-demo-motion-status
+    role="status"
+    hidden
+  >
+    OSの「動きを減らす」設定が有効なため、再生を停止しています。
+  </p>
+
+  <figcaption id="demo-caption" class="demo__caption font-mono">
+    実際の値は stagger {IGNITE_STAGGER.toFixed(2)}s / duration {
+      IGNITE_TOTAL_DURATION.toFixed(2)
+    }s（flash {IGNITE_FLASH_DURATION.toFixed(2)}s + settle {
+      IGNITE_SETTLE_DURATION.toFixed(2)
+    }s）。看板は読める微光状態から、上から順に一度強く光って戻る。
+    値を大きくすると「点灯していく過程」が主役になりすぎ、看板そのものが待たされる。
   </figcaption>
 </figure>
 
@@ -71,21 +112,40 @@ const DEMO_CELLS = [
       border-radius: var(--radius-panel);
     }
 
-    .demo__grid {
+    .demo__signs {
+      display: flex;
+      flex-direction: column;
+      gap: 0.375rem;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .demo__sign {
       display: grid;
-      grid-template-columns: repeat(8, 1fr);
-      gap: 6px;
-    }
-
-    .demo__cell {
-      aspect-ratio: 3 / 4;
-      border-radius: var(--radius-cell);
+      grid-template-columns: 2.5rem minmax(0, 1fr);
+      align-items: center;
+      gap: var(--space-2);
+      min-height: 3rem;
+      padding: 0.5rem var(--space-2);
       background: var(--c-void);
+      border-left: 2px solid var(--neon-core);
+      border-radius: var(--radius-panel);
+      box-shadow: 0 0 18px -14px var(--neon-hue);
     }
 
-    /* JSが動かなくても最終状態（微光）で描画されている */
-    .demo__cell--lit {
-      background: var(--c-facade-lit);
+    .demo__sign-num {
+      color: var(--c-dust);
+      font-size: var(--fs-caption);
+    }
+
+    /* JSなし・reduced motion でも、本番と同じ微光の最終状態で読める。 */
+    .demo__sign-title {
+      --neon-strength: 0.5;
+      min-width: 0;
+      overflow-wrap: anywhere;
+      font-size: clamp(var(--fs-body), 3vw, var(--fs-h2));
+      line-height: 1.2;
     }
 
     .demo__controls {
@@ -138,6 +198,19 @@ const DEMO_CELLS = [
       border-color: var(--c-signal);
     }
 
+    .demo__replay:disabled {
+      color: var(--c-dust);
+      opacity: 0.65;
+      cursor: not-allowed;
+    }
+
+    .demo__motion-status {
+      margin-top: var(--space-2);
+      color: var(--c-dust);
+      font-size: var(--fs-caption);
+      line-height: 1.8;
+    }
+
     .demo__caption {
       margin-top: var(--space-3);
       color: var(--c-dust);
@@ -150,29 +223,55 @@ const DEMO_CELLS = [
 <script>
   // スライダー操作時のみ GSAP を取得する。ページ読み込み時には落とさない。
   import { prefersReducedMotion } from '../motion/motionGuard';
+  import { IGNITE_STAGGER, IGNITE_TOTAL_DURATION } from './igniteConfig';
 
-  const grid = document.querySelector<HTMLElement>('[data-demo-grid]');
+  const signs = document.querySelector<HTMLElement>('[data-demo-signs]');
   const replay = document.querySelector<HTMLButtonElement>('[data-demo-replay]');
   const inputs = document.querySelectorAll<HTMLInputElement>('[data-demo-input]');
+  const motionStatus = document.querySelector<HTMLElement>('[data-demo-motion-status]');
+  const motionPreference = window.matchMedia('(prefers-reduced-motion: reduce)');
 
-  if (grid && replay) {
-    const values = { stagger: 0.04, duration: 0.3 };
+  if (signs && replay) {
+    const values = { stagger: IGNITE_STAGGER, duration: IGNITE_TOTAL_DURATION };
 
     const syncOutput = (key: string, value: number) => {
       const out = document.querySelector<HTMLOutputElement>(`[data-demo-out="${key}"]`);
-      if (out) out.textContent = key === 'stagger' ? value.toFixed(2) : value.toFixed(2);
+      if (out) out.textContent = value.toFixed(2);
     };
 
     let play: ((v: { stagger: number; duration: number }) => void) | null = null;
     let loading = false;
 
+    function syncMotionControls() {
+      const reduced = prefersReducedMotion();
+      const describedBy = reduced ? 'demo-caption demo-motion-status' : 'demo-caption';
+      inputs.forEach((input) => {
+        input.disabled = reduced;
+        input.setAttribute('aria-describedby', describedBy);
+      });
+      replay!.disabled = reduced;
+      replay!.setAttribute('aria-describedby', describedBy);
+      if (motionStatus) motionStatus.hidden = !reduced;
+      return reduced;
+    }
+
     async function ensureLoaded() {
-      if (play || loading || prefersReducedMotion()) return;
+      if (prefersReducedMotion() || play || loading) return;
       loading = true;
       const { createDemoPlayer } = await import('./igniteDemo');
-      play = createDemoPlayer(grid!);
+      play = createDemoPlayer(signs!);
       loading = false;
     }
+
+    async function runDemo() {
+      // プレイヤー取得後にOS設定が変わった場合も、再生のたびに必ず判定する。
+      if (syncMotionControls()) return;
+      await ensureLoaded();
+      if (!syncMotionControls()) play?.(values);
+    }
+
+    syncMotionControls();
+    motionPreference.addEventListener('change', syncMotionControls);
 
     inputs.forEach((input) => {
       input.addEventListener('input', async () => {
@@ -180,14 +279,12 @@ const DEMO_CELLS = [
         const value = Number(input.value);
         values[key as keyof typeof values] = value;
         syncOutput(key, value);
-        await ensureLoaded();
-        play?.(values);
+        await runDemo();
       });
     });
 
     replay.addEventListener('click', async () => {
-      await ensureLoaded();
-      play?.(values);
+      await runDemo();
     });
   }
 </script>

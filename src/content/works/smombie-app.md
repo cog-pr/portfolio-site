@@ -5,8 +5,8 @@ year: 2026
 roles: ["データ前処理", "実装"]
 stack: ["Python", "Streamlit", "scikit-learn", "pandas", "SQLite"]
 summary: "スマホのセンサーデータを機械学習で分析し、歩きスマホをリアルタイムで検知して警告する。"
-thumbnail: "./images/smombie-app-thumb.svg"
-cover: "./images/smombie-app-cover.svg"
+thumbnail: "./images/smombie-app.png"
+cover: "./images/smombie-app.png"
 links:
   - label: "GitHub"
     href: "https://github.com/cog-pr/smombie_app"

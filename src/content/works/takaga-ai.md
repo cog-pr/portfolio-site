@@ -4,8 +4,8 @@ year: 2026
 roles: ["PM", "設計", "実装"]
 stack: ["TypeScript", "React", "Hono", "Cloudflare Workers", "WebSocket", "OpenAI API"]
 summary: "人間チームとAIが大喜利で対戦する4人用のWebゲーム。AIに負けても早押しで挽回できる。"
-thumbnail: "./images/takaga-ai-thumb.svg"
-cover: "./images/takaga-ai-cover.svg"
+thumbnail: "./images/takaga-ai.png"
+cover: "./images/takaga-ai.png"
 links:
   - label: "GitHub"
     href: "https://github.com/tukutteasobu-hackathon-10/tukutteasobu_hackathon_10"

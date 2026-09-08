@@ -19,11 +19,32 @@ const { Content } = await render(entry);
 <Base title={titleEn ?? title} description={summary}>
   <article class="work">
     <header class="work__header">
+      {/*
+        カバーはこのページの LCP 要素。16:9 へ中央切り抜きし AVIF にする。
+
+        幅 800px / quality 50 は実測で決めた値。この画像が実際に表示されるのは
+        .work の 72ch（約576px）までなので、それ以上は配っても見えない。
+
+        実測（/works/takaga-ai/ の LCP 中央値、手元 gzip 配信）:
+          カバー無し      —      1802ms
+          800px  q50   19.9KB   1952ms  ← 採用
+          960px  q55   26.9KB   2102ms  予算割れ
+          1200px q62   41.8KB   2101ms  予算割れ
+
+        26.9KB と 41.8KB が同値なのは、どちらも同じ RTT の枠に落ちるため。
+        20KB あたりに境目があり、そこを越えると往復が1回増える。
+        同じ理由で q42（16.3KB）も 1952ms のままなので、
+        枠の中で最も画質の高い q50 を採っている。
+
+        画像を大きくしたくなったら、まずこの表を測り直すこと。
+      */}
       <Image
         src={cover}
         alt={`${title} のカバー画像`}
-        width={1600}
-        height={900}
+        width={800}
+        height={450}
+        format="avif"
+        quality={50}
         loading="eager"
         fetchpriority="high"
         class="work__cover"

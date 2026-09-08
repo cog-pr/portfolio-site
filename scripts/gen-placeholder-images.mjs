@@ -59,12 +59,10 @@ function buildingSvg({ width, height, seed, coverMode }) {
 
 // src/content/works/*.md の slug と揃えること。
 // 実際のスクリーンショットに差し替えたら、その作品はこの配列から外す。
-const works = [
-  { slug: 'takaga-ai', seed: 11 },
-  { slug: 'omotenashi', seed: 22 },
-  { slug: 'owl-snap', seed: 33 },
-  { slug: 'smombie-app', seed: 44 },
-];
+//
+// 2026-09-08 に全4件が実際の画面に差し替わったため、対象はゼロ。
+// スクリーンショットをすぐ用意できない作品を追加したときだけ、ここに足す。
+const works = [];
 
 const DEST = new URL('../src/content/works/images/', import.meta.url);
 await mkdir(DEST, { recursive: true });

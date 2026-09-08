@@ -5,8 +5,8 @@ year: 2026
 roles: ["バックエンド"]
 stack: ["Python", "FastAPI", "SQLModel", "Supabase", "PostgreSQL", "React Native"]
 summary: "地元の人だけが知る裏スポットを地図で共有する街歩きアプリ。訪れると足あとが投稿者へ届く。"
-thumbnail: "./images/omotenashi-thumb.svg"
-cover: "./images/omotenashi-cover.svg"
+thumbnail: "./images/omotenashi.png"
+cover: "./images/omotenashi.png"
 links:
   - label: "GitHub"
     href: "https://github.com/progatehackathon-26-07-kawappiramochi/omotenashi"

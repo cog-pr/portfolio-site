@@ -4,8 +4,8 @@ year: 2026
 roles: ["フロントエンド", "デプロイ"]
 stack: ["TypeScript", "Next.js", "React", "FastAPI", "AWS Amplify", "Amazon Bedrock"]
 summary: "夕食の写真から、その内容をモチーフにしたオリジナルのフクロウ画像を生成するWebアプリ。"
-thumbnail: "./images/owl-snap-thumb.svg"
-cover: "./images/owl-snap-cover.svg"
+thumbnail: "./images/owl-snap.png"
+cover: "./images/owl-snap.png"
 links:
   - label: "GitHub"
     href: "https://github.com/cog-pr/progate_owl"

@@ -31,16 +31,20 @@ const num = String(index + 1).padStart(2, '0');
 
     <span class="sign__media">
       {/*
-        形式は指定しない。現在のサムネイルは仮素材のSVGで、
-        format を指定するとラスタライズが必要になりビルドが落ちる。
-        指定しなければ SVG はそのまま通り、ラスタ画像に差し替えたときは
-        Astro 側で最適化される。
+        実際の画面のスクリーンショット。比率は作品ごとにまちまちなので、
+        width / height を指定して 3:2 に中央切り抜きさせる（sharp の既定は cover）。
+        表示側も .sign__media の aspect-ratio と object-fit で受けているため、
+        素材の比率が変わっても崩れない。
+
+        alt は空。作品名は隣にテキストで出ており、読み上げで二重になるため。
       */}
       <Image
         src={thumbnail}
         alt=""
         width={480}
         height={320}
+        format="avif"
+        quality={60}
         loading="lazy"
         class="sign__thumb"
         transition:name={`work-${work.id}`}

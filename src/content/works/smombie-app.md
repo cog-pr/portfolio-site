@@ -1,7 +1,7 @@
 ---
 title: "歩きスマホ検知アプリ"
 titleEn: "Smombie App"
-year: 2026
+year: 2025
 roles: ["データ前処理", "実装"]
 stack: ["Python", "Streamlit", "scikit-learn", "pandas", "SQLite"]
 summary: "スマホのセンサーデータを機械学習で分析し、歩きスマホをリアルタイムで検知して警告する。"

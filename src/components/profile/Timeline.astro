@@ -1,0 +1,217 @@
+---
+/*
+  経歴。トップページの、プロフィールと成果物への入口の間に置く。
+
+  中央に線を1本通し、その左右へ交互に項目を振る年表。
+  振り分けは CSS の配置だけで行い、HTML の順序は時系列のまま触らない。
+  見た目が左右に散っても、読み上げとキーボードの順序は上から下で一定になる。
+
+  狭い画面では交互にしない。375px で左右に割ると1カラム150px ほどしか取れず、
+  日付も本文も折り返しだらけになる。線を左端へ寄せ、全項目を右側へ積む。
+*/
+const timeline = [
+  {
+    date: '2024.04',
+    datetime: '2024-04',
+    title: '千葉工業大学 入学',
+    body: '千葉工業大学 情報変革科学部 認知情報科学科 １期生として入学。',
+  },
+  {
+    date: '2025.12',
+    datetime: '2025-12',
+    title: '歩きスマホ検知アプリ（大学実験）',
+    body: '大学の実験で機械学習による歩きスマホの検知を行い、Accuracy97％の精度の機械学習モデルを作成。',
+  },
+  {
+    date: '2026.04',
+    datetime: '2026-04',
+    title: 'Progateハッカソン powered by AWS',
+    body: 'ハッカソン初参加。Next.jsでフロントエンドの開発を担当。Git・GitHubの使い方をAWSの社員の方から学ぶ。',
+  },
+  {
+    date: '2026.06',
+    datetime: '2026-06',
+    title: 'Nekko Cloud Team 入部',
+    body: 'Twitterでcyokozaiさんに出会い、技術系サークルに入部する。',
+  },
+  {
+    date: '2026.07',
+    datetime: '2026-07',
+    title: '第10回ツクってアソぶハッカソン',
+    body: '大学の友達を誘って参加し、ファイナリストに選出。',
+  },
+  {
+    date: '2026.07',
+    datetime: '2026-07',
+    title: 'Progateハッカソン 2026.07',
+    body: 'FastAPIでバックエンドの開発を担当。',
+  },
+  {
+    date: '2026.08',
+    datetime: '2026-08',
+    title: 'Findy Campus Hackathon #2',
+    body: 'TypeScriptとHono、Cloudflareの機能を駆使し、「WakeMate」を開発。グランプリ＆dip賞を受賞。',
+  },
+];
+---
+
+<section class="career" aria-labelledby="career-heading">
+  <div class="career__inner">
+    <h2 class="career__label font-mono" id="career-heading">CAREER</h2>
+
+    <ol class="timeline">
+      {
+        timeline.map((item, i) => (
+          /*
+            --i で行番号を明示する。デスクトップでは列を左右に振るため、
+            指定が無いと自動配置が1行に2件詰めてしまい、段違いにならない。
+          */
+          <li class="timeline__item" style={`--i: ${i + 1}`}>
+            <time class="timeline__date font-mono" datetime={item.datetime}>
+              {item.date}
+            </time>
+            <h3 class="timeline__title">{item.title}</h3>
+            <p class="timeline__body">{item.body}</p>
+          </li>
+        ))
+      }
+    </ol>
+  </div>
+</section>
+
+<style>
+  @layer components {
+    .career {
+      position: relative;
+      padding: 0 var(--space-3) var(--space-5);
+      background: var(--c-void);
+    }
+
+    .career__inner {
+      max-width: 54rem;
+      margin-inline: auto;
+    }
+
+    .career__label {
+      color: var(--c-dust);
+      font-size: var(--fs-caption);
+      font-weight: 400;
+      letter-spacing: 0.16em;
+      margin-bottom: var(--space-4);
+    }
+
+    /*
+      線と節点の位置は、この2つの変数から導く。
+      個別に px を書くと、余白を変えたときに節点だけ線から外れる。
+    */
+    .timeline {
+      --line-x: 3px; /* 線の中心X（狭い画面では左端） */
+      --rail: var(--space-4); /* 線と本文のあいだ */
+
+      position: relative;
+      display: grid;
+      gap: var(--space-4);
+      padding-left: var(--rail);
+    }
+
+    /* 線。上下は闇へ溶かす。切り落とすと定規のように見えるため */
+    .timeline::before {
+      content: '';
+      position: absolute;
+      top: 0.3rem;
+      bottom: 0.3rem;
+      left: var(--line-x);
+      width: 1px;
+      transform: translateX(-50%);
+      background: linear-gradient(
+        to bottom,
+        transparent,
+        var(--c-facade-lit) 6%,
+        var(--c-facade-lit) 94%,
+        transparent
+      );
+    }
+
+    .timeline__item {
+      position: relative;
+    }
+
+    /*
+      節点。プロフィールのスキル欄と同じ「窓明かり」を使い、
+      サイト内で小さく反復させる（§1.1 発光は一点に集める）。
+    */
+    .timeline__item::before {
+      content: '';
+      position: absolute;
+      top: 0.45em;
+      left: calc(var(--line-x) - var(--rail) - 2.5px);
+      width: 5px;
+      height: 7px;
+      border-radius: 1px;
+      background: var(--c-facade-lit);
+      box-shadow: 0 0 8px -2px var(--c-signal);
+    }
+
+    .timeline__date {
+      color: var(--c-dust);
+      font-size: var(--fs-caption);
+      letter-spacing: 0.1em;
+    }
+
+    .timeline__title {
+      margin-top: 0.2rem;
+      color: var(--c-fluorescent);
+      font-size: var(--fs-small);
+      font-weight: 700;
+      line-height: 1.6;
+    }
+
+    .timeline__body {
+      margin-top: 0.35rem;
+      color: var(--c-dust);
+      font-size: var(--fs-small);
+      line-height: 1.9;
+    }
+
+    /*
+      768px 以上で交互に振る。
+      行番号（--i）を明示しているので、左右どちらの列でも段がずれない。
+    */
+    @media (min-width: 768px) {
+      .timeline {
+        --line-x: 50%;
+        --rail: var(--space-5);
+
+        grid-template-columns: 1fr 1fr;
+        column-gap: var(--rail);
+        padding-left: 0;
+      }
+
+      .timeline__item {
+        grid-row: var(--i);
+      }
+
+      .timeline__item:nth-child(odd) {
+        grid-column: 1;
+        text-align: right;
+      }
+
+      .timeline__item:nth-child(even) {
+        grid-column: 2;
+      }
+
+      /*
+        節点は列の内側の端へ。列間（--rail）の中央に線があるので、
+        その半分ぶん外へ出せば線の上に乗る。
+      */
+      .timeline__item:nth-child(odd)::before {
+        left: auto;
+        right: calc(var(--rail) / -2 - 2.5px);
+      }
+
+      .timeline__item:nth-child(even)::before {
+        left: calc(var(--rail) / -2 - 2.5px);
+      }
+    }
+  }
+</style>

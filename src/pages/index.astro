@@ -2,6 +2,7 @@
 import { Image } from 'astro:assets';
 import Base from '../layouts/Base.astro';
 import Profile from '../components/profile/Profile.astro';
+import Timeline from '../components/profile/Timeline.astro';
 import WorksEntry from '../components/facade/WorksEntry.astro';
 import heroImage from '../assets/hero.png';
 import { SITE_NAME } from '../lib/site';
@@ -57,6 +58,7 @@ import { SITE_NAME } from '../lib/site';
     </a>
   </section>
   <Profile />
+  <Timeline />
   <WorksEntry />
 </Base>
 

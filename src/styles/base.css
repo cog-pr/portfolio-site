@@ -1,7 +1,11 @@
 @layer base {
+  /*
+    既定の文字色は本文（--c-text）。補助情報はそれぞれの箇所で --c-dust を指定する。
+    既定を補助情報の色にすると、色を指定し忘れた文章がすべて暗く沈む。
+  */
   body {
     background: var(--c-void);
-    color: var(--c-dust);
+    color: var(--c-text);
     font-family: var(--font-jp);
     font-size: var(--fs-body);
   }

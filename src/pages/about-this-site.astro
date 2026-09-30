@@ -233,7 +233,7 @@ const measuredAt = new Date(metrics.measuredAt).toLocaleString('ja-JP', {
 
     <section class="about__section" aria-labelledby="metrics-heading">
       <h2 id="metrics-heading" class="about__heading">実測値</h2>
-      <p class="about__note font-mono">
+      <p class="about__measured font-mono">
         最終計測: {measuredAt} / {metrics.environment}
       </p>
 
@@ -475,7 +475,7 @@ const measuredAt = new Date(metrics.measuredAt).toLocaleString('ja-JP', {
     }
 
     .about__lead {
-      color: var(--c-dust);
+      color: var(--c-text);
     }
 
     .about__section {
@@ -490,14 +490,20 @@ const measuredAt = new Date(metrics.measuredAt).toLocaleString('ja-JP', {
       border-bottom: 1px solid var(--c-facade-lit);
     }
 
+    /*
+      注記（.about__note）も文章として読ませるので、本文と同じ色と大きさにする。
+      小さく暗いのは計測日時のような補助情報（.about__measured）だけ。
+    */
     .about__body,
     .about__note {
-      color: var(--c-dust);
+      color: var(--c-text);
       margin-block: var(--space-2);
     }
 
-    .about__note {
+    .about__measured {
+      color: var(--c-dust);
       font-size: var(--fs-small);
+      margin-block: var(--space-2);
     }
 
     code {
@@ -545,10 +551,11 @@ const measuredAt = new Date(metrics.measuredAt).toLocaleString('ja-JP', {
       box-shadow: 0 0 8px -2px var(--c-signal);
     }
 
+    /* 名前（ラベル）は小さく、なぜ選んだか（文章）は本文の大きさで読ませる */
     .stack__note {
       margin: var(--space-1) 0 0 calc(5px + 0.6em);
-      color: var(--c-dust);
-      font-size: var(--fs-small);
+      color: var(--c-text);
+      font-size: var(--fs-body);
       line-height: 1.85;
     }
 
@@ -590,8 +597,8 @@ const measuredAt = new Date(metrics.measuredAt).toLocaleString('ja-JP', {
 
     .craft__body {
       margin-top: var(--space-1);
-      color: var(--c-dust);
-      font-size: var(--fs-small);
+      color: var(--c-text);
+      font-size: var(--fs-body);
       line-height: 1.9;
     }
 
@@ -715,11 +722,15 @@ const measuredAt = new Date(metrics.measuredAt).toLocaleString('ja-JP', {
       letter-spacing: 0.06em;
     }
 
+    /*
+      判断・決め手・選ばなかった理由は、どれも文章として読ませるので本文にする。
+      見出しの色で目立たせるのは、選択肢の名前（.log__alt-option）だけ。
+    */
     .log__meta dd {
       margin-left: 0;
       margin-bottom: var(--space-2);
-      color: var(--c-fluorescent);
-      font-size: var(--fs-small);
+      color: var(--c-text);
+      font-size: var(--fs-body);
       line-height: 1.8;
     }
 
@@ -740,7 +751,7 @@ const measuredAt = new Date(metrics.measuredAt).toLocaleString('ja-JP', {
 
     .log__alt-why {
       display: block;
-      color: var(--c-dust);
+      color: var(--c-text);
     }
 
     .log__body {
@@ -749,7 +760,7 @@ const measuredAt = new Date(metrics.measuredAt).toLocaleString('ja-JP', {
 
     .log__body :global(p) {
       margin-bottom: var(--space-2);
-      color: var(--c-dust);
+      color: var(--c-text);
     }
   }
 </style>

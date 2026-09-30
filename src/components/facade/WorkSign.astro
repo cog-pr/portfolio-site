@@ -155,9 +155,10 @@ const num = String(index + 1).padStart(2, '0');
       transition: --neon-strength var(--dur-fast) var(--ease-out);
     }
 
+    /* 題は説明文より小さくしない（説明文が本文の大きさなので、同じ大きさにして色で分ける） */
     .sign__title-jp {
       color: var(--c-fluorescent);
-      font-size: var(--fs-small);
+      font-size: var(--fs-body);
     }
 
     .sign__meta {
@@ -169,10 +170,11 @@ const num = String(index + 1).padStart(2, '0');
       letter-spacing: 0.06em;
     }
 
+    /* 読ませる説明文。色もサイズも本文にする（年・役割・技術スタックは補助情報のまま） */
     .sign__summary {
       margin-top: 0.2rem;
-      color: var(--c-dust);
-      font-size: var(--fs-small);
+      color: var(--c-text);
+      font-size: var(--fs-body);
       line-height: 1.85;
       max-width: 52ch;
     }

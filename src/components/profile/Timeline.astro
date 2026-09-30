@@ -152,24 +152,26 @@ const timeline = [
       box-shadow: 0 0 8px -2px var(--c-signal);
     }
 
+    /* 日付は補助情報、題は見出し、説明は本文（仕様書 §5.1 (c)） */
     .timeline__date {
       color: var(--c-dust);
       font-size: var(--fs-caption);
       letter-spacing: 0.1em;
     }
 
+    /* 説明文より小さいと見出しに見えないので、本文と同じ大きさにして太さと色で分ける */
     .timeline__title {
       margin-top: 0.2rem;
       color: var(--c-fluorescent);
-      font-size: var(--fs-small);
+      font-size: var(--fs-body);
       font-weight: 700;
       line-height: 1.6;
     }
 
     .timeline__body {
       margin-top: 0.35rem;
-      color: var(--c-dust);
-      font-size: var(--fs-small);
+      color: var(--c-text);
+      font-size: var(--fs-body);
       line-height: 1.9;
     }
 

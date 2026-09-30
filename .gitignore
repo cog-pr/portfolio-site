@@ -31,6 +31,8 @@ fonts-src/
 
 # Claude Code のローカル設定（各自の環境ごとの許可設定なので共有しない）
 .claude/settings.local.json
+# 個人で使う MCP サーバーの設定（サイトのビルドには関係しない開発ツールなので共有しない）
+.mcp.json
 
 # wrangler のローカル状態・一時ファイル（miniflare のキャッシュなど）
 .wrangler/

@@ -52,9 +52,13 @@ function isSoftwareRenderer(gl: WebGLRenderingContext): boolean {
 }
 
 export function initSky(container: HTMLElement): void {
+  /*
+    alpha: true。空は夜景の写真の上（カードの下）に重ねる光だけを描き、
+    光のないところは透明にする（地を塗ると夜景を隠してしまう）。
+  */
   const renderer = new Renderer({
     dpr: Math.min(window.devicePixelRatio || 1, 1.5),
-    alpha: false,
+    alpha: true,
   });
   const gl = renderer.gl;
 
@@ -76,7 +80,6 @@ export function initSky(container: HTMLElement): void {
     uniforms: {
       u_time: { value: 0 },
       u_colorSignal: { value: readColorToken('--c-signal') },
-      u_colorVoid: { value: readColorToken('--c-void') },
     },
   });
   const mesh = new Mesh(gl, { geometry, program });

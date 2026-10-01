@@ -2,11 +2,32 @@
 
 <style>
   @layer components {
+    /*
+      光害の空。夜景の写真の上、作品のカードの下に重ねる、下端から滲む淡い光。
+      地の色は持たない（透明）。夜景を塗りつぶさないため。
+    */
     .sky {
       position: absolute;
       inset: 0;
       z-index: 0;
       overflow: hidden;
+      pointer-events: none;
+      /* WebGL初期化までの、あるいは条件を満たさない場合の代替。淡い滲みだけを残す。 */
+      background-image: linear-gradient(
+        to top,
+        color-mix(in srgb, var(--c-signal) 18%, transparent) 0%,
+        transparent 45%
+      );
+      /*
+        光は下端が最も明るいので、セクションの終わりで透明へ溶かす。
+        セクションの終わりで光が切れて、夜景の上に横線が出ないようにするため。
+      */
+      mask-image: linear-gradient(to top, transparent 0, #000 var(--space-6));
+    }
+
+    /* canvas が挿さったら代替のグラデーションは不要（重ねると光が二重になる） */
+    .sky:has(canvas) {
+      background-image: none;
     }
 
     .sky :global(canvas) {

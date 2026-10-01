@@ -26,7 +26,7 @@ const num = String(index + 1).padStart(2, '0');
   リンクは <a> ひとつで囲む。JSなしでもキーボードでも同じ挙動になる。
 */}
 <li class="sign" style={`--neon-hue: ${hue}; --neon-core: ${core};`}>
-  <a href={`/works/${work.id}/`} class="sign__link">
+  <a href={`/works/${work.id}/`} class="sign__link card">
     <span class="sign__num font-mono">{num}</span>
 
     <span class="sign__media">
@@ -78,18 +78,18 @@ const num = String(index + 1).padStart(2, '0');
       --sign-lit: 1;
     }
 
+    /*
+      作品1件 = カード1枚（.card）。番号・サムネイル・題・メタ情報・説明・技術スタックを
+      1つのまとまりとして載せ、作品どうしのあいだから夜景を見せる。
+      ホバーではカードの地を一段明るくする（--c-facade）。
+    */
     .sign__link {
       display: grid;
       grid-template-columns: 2.5rem 240px 1fr;
       gap: var(--space-3);
       align-items: start;
-      padding: var(--space-3) var(--space-2);
-      border-top: 1px solid var(--c-facade);
+      padding: var(--space-3);
       transition: background var(--dur-base) var(--ease-inout);
-    }
-
-    .sign:last-child .sign__link {
-      border-bottom: 1px solid var(--c-facade);
     }
 
     .sign__link:hover,
@@ -199,7 +199,7 @@ const num = String(index + 1).padStart(2, '0');
         /* 番号を畳んで、画像と本文の2列にする */
         grid-template-columns: 38vw 1fr;
         gap: var(--space-2);
-        padding: var(--space-3) 0;
+        padding: var(--card-pad);
       }
 
       .sign__num {

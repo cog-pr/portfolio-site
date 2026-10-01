@@ -35,6 +35,11 @@ const TUBES = [
 ];
 ---
 
+{/*
+  セクション自体は地を持たない。作品1件を1枚のカードにし（WorkSign の .sign__link.card）、
+  カードのあいだから夜景が見えるようにする。ページの見出しと説明もカードに載せる（ページ側）。
+  重なり順: 夜景（SiteBackdrop）→ 光害の空（淡い光）→ カード → 看板の文字。
+*/}
 <section id="works" class="works-section">
   <LightPollution />
   <VerticalRail />
@@ -63,27 +68,7 @@ const TUBES = [
   @layer components {
     .works-section {
       position: relative;
-      padding: var(--space-6) var(--space-3);
-      background: var(--c-void);
-      /* WebGL初期化までの、あるいは条件を満たさない場合の代替。淡い滲みだけを残す。 */
-      background-image: linear-gradient(
-        to top,
-        color-mix(in srgb, var(--c-signal) 18%, var(--c-void)) 0%,
-        var(--c-void) 45%
-      );
-    }
-
-    /* 光害の空は下端が最も明るいので、セクションの終わりで闇に還す */
-    .works-section::after {
-      content: '';
-      position: absolute;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      height: var(--space-6);
-      z-index: 0;
-      pointer-events: none;
-      background: linear-gradient(to bottom, transparent, var(--c-void));
+      padding: var(--space-6) var(--card-gutter);
     }
 
     .works-section__inner {
@@ -93,9 +78,11 @@ const TUBES = [
       margin-inline: auto;
     }
 
+    /* 作品のカードどうしのあいだに夜景を見せる */
     .works {
       display: flex;
       flex-direction: column;
+      gap: var(--space-3);
     }
   }
 </style>

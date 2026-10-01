@@ -6,7 +6,7 @@ import Base from '../layouts/Base.astro';
   title="404"
   description="お探しのページは見つかりませんでした。"
 >
-  <section class="notfound">
+  <section class="notfound card">
     <p class="notfound__code font-display">404</p>
     <h1 class="notfound__title">ページが見つかりません</h1>
     <p class="notfound__body">
@@ -19,26 +19,31 @@ import Base from '../layouts/Base.astro';
 
 <style>
   @layer components {
+    /*
+      本文のまとまりを1枚のカード（.card）にし、周りに夜景を見せる。
+      画面の高さいっぱいには広げず、上下に夜景をあけて置く。
+    */
     .notfound {
       display: flex;
       flex-direction: column;
       align-items: flex-start;
-      justify-content: center;
       gap: var(--space-2);
-      min-height: 100svh;
-      max-width: 72ch;
-      margin-inline: auto;
-      padding: var(--space-3);
+      width: min(
+        72ch - var(--space-3) * 2 + var(--card-pad) * 2,
+        100% - var(--card-gutter) * 2
+      );
+      margin: max(calc(var(--space-5) + var(--space-3)), 22svh) auto var(--space-6);
     }
 
     /*
-      唯一の光。§1.1 の「闇が主役で、光は例外」をこのページでも守る。
-      404 は光源ではないためグローを付けず、文字色だけで示す。
+      番号はアクセントの紫で示す。--c-signal をそのまま文字色にするとカードの上で
+      約 2.3:1 しか出ず読みにくいので、ネオンの紫とその芯（--neon-violet-core）の中間まで
+      明るくする。404 は看板ではないのでネオンのグローは付けない（§6.4）。
     */
     .notfound__code {
       font-size: var(--fs-display);
       line-height: 1;
-      color: var(--c-signal);
+      color: color-mix(in srgb, var(--neon-violet) 50%, var(--neon-violet-core));
     }
 
     .notfound__title {

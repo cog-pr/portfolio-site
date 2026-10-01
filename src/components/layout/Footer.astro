@@ -7,23 +7,34 @@ const contactEmail = CONTACT_EMAIL;
 const socials = SOCIALS;
 ---
 
+{/*
+  フッター＝ページ末尾の静かな情報領域。連絡先・外部リンク・著作権情報をまとめる。
+
+  カードにはしない。本文の情報のまとまり（プロフィール・経歴・作品）と同じ形にすると、
+  問い合わせを促す CTA のカードに見え、本文のカードと性質が競合したため。
+  地も枠も持たず、夜景の上に直接置く（読みやすさは下のスクリムで支える）。
+*/}
 <footer class="site-footer">
   <div class="site-footer__inner">
-    <p class="site-footer__lead">カジュアルなご連絡はXのDMへ、正式なご相談はメールでお願いします。</p>
-    <a href={`mailto:${contactEmail}`} class="site-footer__contact font-display">
-      {contactEmail}
-    </a>
-    <ul class="site-footer__socials font-mono">
-      {
-        socials.map((s) => (
-          <li>
-            <a href={s.href} rel="me noopener noreferrer" target="_blank">
-              {s.label}
-            </a>
-          </li>
-        ))
-      }
-    </ul>
+    <div class="site-footer__primary">
+      <div class="site-footer__contact-group">
+        <a href={`mailto:${contactEmail}`} class="site-footer__contact font-mono">
+          {contactEmail}
+        </a>
+        <p class="site-footer__lead">カジュアルなご連絡はXのDMへ、正式なご相談はメールでお願いします。</p>
+      </div>
+      <ul class="site-footer__socials font-mono">
+        {
+          socials.map((s) => (
+            <li>
+              <a href={s.href} rel="me noopener noreferrer" target="_blank">
+                {s.label}
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
     {/* 記名する場所なので本名を出す（ハンドルはプロフィール側で見せている） */}
     <p class="site-footer__meta font-mono">© {new Date().getFullYear()} {AUTHOR.en}</p>
   </div>
@@ -31,50 +42,66 @@ const socials = SOCIALS;
 
 <style is:global>
   @layer components {
+    /*
+      夜景の上に直接置くので、写真の明るい箇所に文字が重なっても読めるよう、
+      境界も角丸もない弱いスクリムを下から敷く。写真が背景として見える濃さにとどめる。
+    */
     .site-footer {
-      /*
-        position を付けないと「配置されていない要素」扱いになり、
-        トップページの固定背景（.hero__media / position:fixed）のほうが
-        描画順序で上に来てしまい、フッターに夜景が透ける。
-        配置済みにして、DOM順どおり背景の上に乗せる。
-      */
       position: relative;
-      padding: var(--space-6) var(--space-3) var(--space-5);
-      background: var(--c-void);
-    }
-
-    .site-footer__inner {
-      max-width: 72ch;
-      margin-inline: auto;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: var(--space-3);
-      text-align: center;
-    }
-
-    /* 連絡の案内は文章として読ませるので本文の色。SNS と © は補助情報のまま */
-    .site-footer__lead {
-      color: var(--c-text);
+      padding: var(--space-5) var(--card-gutter) var(--space-4);
+      background: linear-gradient(
+        to bottom,
+        transparent,
+        color-mix(in srgb, var(--c-void) 45%, transparent) var(--space-5)
+      );
     }
 
     /*
-      --c-sodium はページ全体でここ一箇所だけ。紫の画面の最後に灯る暖色。
+      幅はトップの入口・プロフィールのカードの外寸（中身 54rem + カードの内側の余白）とそろえる。
+      カードの外側（--card-gutter）はセクションの左右の余白と同じ。
+    */
+    .site-footer__inner {
+      max-width: calc(54rem + var(--card-pad) * 2);
+      margin-inline: auto;
+    }
 
-      ここはネオン管にしない。一度ネオン化を試したが、
-      メールアドレスが光ると装飾が主張しすぎて品がなかった。
-      連絡先は「読ませるもの」で、看板ではない。
-      ネオンは §6.4 に従い、看板的な要素にだけ使う。
+    .site-footer__primary {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-3);
+    }
+
+    .site-footer__contact-group {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-1);
+    }
+
+    /*
+      メールアドレスは大きく光らせるものではなく、読ませて押させるもの。
+      本文の大きさの等幅で、下線で「押せる」ことを示す。発光・ネオン管は使わない。
     */
     .site-footer__contact {
-      font-size: var(--fs-h2);
-      color: var(--c-sodium);
-      transition: opacity var(--dur-fast) var(--ease-out);
+      align-self: flex-start;
+      max-width: 100%;
+      overflow-wrap: anywhere;
+      color: var(--c-fluorescent);
+      font-size: var(--fs-body);
+      text-decoration: underline;
+      text-decoration-color: color-mix(in srgb, var(--c-fluorescent) 35%, transparent);
+      text-underline-offset: 0.25em;
+      transition: text-decoration-color var(--dur-fast) var(--ease-out);
     }
 
     .site-footer__contact:hover,
     .site-footer__contact:focus-visible {
-      opacity: 0.8;
+      text-decoration-color: var(--c-fluorescent);
+    }
+
+    /* 連絡の案内は文章として読ませるので本文の色 */
+    .site-footer__lead {
+      color: var(--c-text);
+      max-width: 46ch;
     }
 
     .site-footer__socials {
@@ -83,8 +110,17 @@ const socials = SOCIALS;
       font-size: var(--fs-small);
     }
 
+    /*
+      指で押しやすいよう、文字の上下と最小幅で当たり判定を取る
+      （「X」は1文字で、文字だけだと幅 8px しかない）。
+    */
     .site-footer__socials a {
+      display: inline-block;
+      min-width: var(--space-3);
+      padding-block: var(--space-1);
+      text-align: center;
       color: var(--c-dust);
+      transition: color var(--dur-fast) var(--ease-out);
     }
 
     .site-footer__socials a:hover,
@@ -93,8 +129,28 @@ const socials = SOCIALS;
     }
 
     .site-footer__meta {
+      margin-top: var(--space-4);
+      padding-top: var(--space-2);
+      border-top: 1px solid color-mix(in srgb, var(--c-fluorescent) 12%, transparent);
       color: var(--c-dust);
       font-size: var(--fs-caption);
+    }
+
+    /* 768px 以上では、連絡先と案内を左、SNS を右に置く */
+    @media (min-width: 768px) {
+      .site-footer__primary {
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: var(--space-5);
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .site-footer__contact,
+      .site-footer__socials a {
+        transition: none;
+      }
     }
   }
 </style>

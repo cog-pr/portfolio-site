@@ -2,7 +2,6 @@ precision mediump float;
 
 uniform float u_time;
 uniform vec3 u_colorSignal;
-uniform vec3 u_colorVoid;
 
 varying vec2 v_uv;
 
@@ -40,13 +39,14 @@ void main() {
 
   float n = fbm(uv * 2.5 + vec2(0.0, t));
 
-  // 画面下端から上に向かって --c-signal から --c-void へ減衰する
+  // 画面下端から上に向かって減衰する --c-signal の光
   float gradient = pow(clamp(1.0 - uv.y, 0.0, 1.0), 3.0);
   float intensity = gradient * (0.55 + 0.45 * n);
 
-  // 光害は控えめに。闇が主役という原則を背景1枚でも破らないための上限。
+  // 光害は控えめに。空は装飾で、上に載る看板と文字より目立たせないための上限。
   intensity *= 0.32;
 
-  vec3 color = mix(u_colorVoid, u_colorSignal, clamp(intensity, 0.0, 1.0));
-  gl_FragColor = vec4(color, 1.0);
+  // 光だけを描き、光の強さをそのまま不透明度にする。光のないところは透明で、
+  // 下の夜景の写真がそのまま見える（renderer は alpha: true）。
+  gl_FragColor = vec4(u_colorSignal, clamp(intensity, 0.0, 1.0));
 }

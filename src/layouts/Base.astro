@@ -11,7 +11,9 @@ import '../styles/fonts-jp.generated.css';
 import '../styles/reset.css';
 import '../styles/base.css';
 import '../styles/neon.css';
+import '../styles/card.css';
 import { ClientRouter } from 'astro:transitions';
+import SiteBackdrop from '../components/layout/SiteBackdrop.astro';
 import Header from '../components/layout/Header.astro';
 import Footer from '../components/layout/Footer.astro';
 import { SITE_NAME, AUTHOR, SOCIALS, CONTACT_EMAIL } from '../lib/site';
@@ -32,9 +34,21 @@ interface Props {
     全ページに重複して出さずトップだけに置く。
   */
   siteJsonLd?: boolean;
+  /*
+    背景の夜景（SiteBackdrop）を HTML の解析と同時に取得するかどうか。
+    夜景を直接見せるヒーローを持つトップだけが true。他のページは load 後に取得し、
+    LCP 要素と帯域を分け合わないようにする（SiteBackdrop.astro 参照）。
+  */
+  heroBackdrop?: boolean;
 }
 
-const { title, description, preloadFonts = [], siteJsonLd = false } = Astro.props;
+const {
+  title,
+  description,
+  preloadFonts = [],
+  siteJsonLd = false,
+  heroBackdrop = false,
+} = Astro.props;
 const siteName = SITE_NAME;
 
 /*
@@ -163,6 +177,8 @@ const jsonLd = {
     <ClientRouter />
   </head>
   <body>
+    {/* 全ページ共通の背景（夜の都市）。読む情報は、まとまりごとのカード（.card）に載せる */}
+    <SiteBackdrop eager={heroBackdrop} />
     <Header />
     <main>
       <slot />

@@ -24,7 +24,7 @@ const range =
   description="設計から実装まで手を入れた成果物の一覧。"
 >
   <WorksList>
-    <header class="works-page__header">
+    <header class="works-page__header card">
       <h1 class="works-page__title font-display">WORKS</h1>
       <p class="works-page__meta font-mono">
         <span class="works-page__count">{works.length}</span>
@@ -40,8 +40,9 @@ const range =
 
 <style>
   @layer components {
+    /* 見出し・件数・説明文を1枚のカードにまとめる（説明文を夜景へ直接載せない） */
     .works-page__header {
-      margin-bottom: var(--space-4);
+      margin-bottom: var(--space-3);
     }
 
     .works-page__title {

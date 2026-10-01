@@ -1,0 +1,215 @@
+---
+import { getImage } from 'astro:assets';
+import heroImage from '../../assets/hero.png';
+
+/*
+  サイト全体の背景（夜の都市の写真）。仕様書 §1.1 / §5.0。
+
+  ページの3層のいちばん奥。すべてのページで同じ1枚をビューポートに固定し、
+  その上を、情報のまとまりごとのカード（src/styles/card.css）が流れていく。
+  トップのヒーローはこの写真を直接見せる領域で、自前の画像は持たない
+  （同じ写真を2枚重ねて描かない・2回取得しない）。
+
+  transition:persist でページ遷移をまたいで同じ要素を使い回す。
+  遷移のたびに img を作り直すと、キャッシュ済みでもデコードし直しで一瞬ちらつく。
+
+  暗く沈めて使うので quality は低くてよい。全ページで同じ srcset なので、
+  どのページで取得してもキャッシュが共有される。
+*/
+interface Props {
+  /*
+    true: HTML の解析と同時に取得する（トップ。ヒーローがこの写真を直接見せるため）。
+    false: 本文を配り終えてから取得する（トップ以外）。「最初の操作」か
+           「load から 2.5 秒」の早い方。一覧の演出（motion/islands.ts）と同じ基準。
+
+    トップ以外では、背景は本文と作品画像より後でよい。先に取りに行くと
+    LCP 要素（作品詳細ではカバー画像）と帯域を分け合い、実測で作品詳細の LCP が
+    1959 → 2031ms に悪化して予算 2000ms を割った。効かなかった手:
+      - loading="lazy": 取得はレイアウト直後に始まり、LCP より前に重なる（2032ms）
+      - load 直後に取得: このページは load が LCP より先に来るうえ、JS で src を
+        入れた画像は優先度が High になり、かえって悪化した（2106ms）
+
+    JS が動かない環境では <noscript> の img が同じ写真を普通に読み込む。
+  */
+  eager?: boolean;
+}
+
+const { eager = false } = Astro.props;
+
+const image = await getImage({
+  src: heroImage,
+  widths: [480, 768, 1100, 1600],
+  format: 'avif',
+  quality: 35,
+});
+const src = image.src;
+const srcset = image.srcSet.attribute;
+const { width, height } = image.attributes;
+---
+
+<div class="backdrop" aria-hidden="true" transition:persist="site-backdrop">
+  {
+    eager ? (
+      /*
+        fetchpriority は low。トップの LCP 要素はヒーローの文字で、画像を high にすると
+        帯域を奪って文字の描画が遅れた（実測 1.86s → 2.19s）。
+      */
+      <img
+        src={src}
+        srcset={srcset}
+        sizes="100vw"
+        width={width}
+        height={height}
+        alt=""
+        loading="eager"
+        fetchpriority="low"
+        decoding="async"
+        class="backdrop__image"
+      />
+    ) : (
+      <>
+        <img
+          data-backdrop-src={src}
+          data-backdrop-srcset={srcset}
+          data-backdrop-pending
+          sizes="100vw"
+          width={width}
+          height={height}
+          alt=""
+          decoding="async"
+          class="backdrop__image"
+        />
+        <noscript>
+          <img
+            src={src}
+            srcset={srcset}
+            sizes="100vw"
+            width={width}
+            height={height}
+            alt=""
+            decoding="async"
+            class="backdrop__image"
+          />
+        </noscript>
+      </>
+    )
+  }
+</div>
+
+{/*
+  トップ以外で、写真の取得を始める。「最初の操作」か「load から 2.5 秒」の早い方
+  （motion/islands.ts の whenSettled と同じ基準）。別チャンクにすると初期リクエストが
+  1本増えるので、インラインで持つ。
+  ページ遷移（ClientRouter）で来た場合は load がもう来ないので readyState を見る。
+  persist された要素がすでに読み込み済みなら data 属性が無いので何もしない。
+*/}
+<script is:inline>
+  (() => {
+    const start = () => {
+      for (const img of document.querySelectorAll('img[data-backdrop-src]')) {
+        // JS で src を入れた画像は High になるため、明示的に低くする
+        img.fetchPriority = 'low';
+        img.srcset = img.dataset.backdropSrcset;
+        img.src = img.dataset.backdropSrc;
+        img.removeAttribute('data-backdrop-src');
+        img.removeAttribute('data-backdrop-srcset');
+        const reveal = () => img.removeAttribute('data-backdrop-pending');
+        img.decode().then(reveal, reveal);
+      }
+    };
+    if (!document.querySelector('img[data-backdrop-src]')) return;
+
+    const EVENTS = ['scroll', 'pointerdown', 'keydown', 'touchstart'];
+    let timer = 0;
+    const fire = () => {
+      EVENTS.forEach((type) => removeEventListener(type, fire));
+      clearTimeout(timer);
+      start();
+    };
+    const arm = () => {
+      EVENTS.forEach((type) => addEventListener(type, fire, { once: true, passive: true }));
+      timer = setTimeout(fire, 2500);
+    };
+    if (document.readyState === 'complete') arm();
+    else addEventListener('load', arm, { once: true });
+  })();
+</script>
+
+<style>
+  @layer components {
+    /*
+      z-index: -1 で、配置していない本文も含めたすべての内容より後ろに置く。
+      body の背景はルート（キャンバス）に描かれるので、これより下に来る。
+    */
+    .backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      pointer-events: none;
+    }
+
+    /* JS なしで noscript 側の img が出る場合も、同じ位置に重なるようにする */
+    .backdrop__image {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      /*
+        全体を一律に暗くするとネオンまで潰れ、濁った写真になる。
+        contrast を上げて暗部を沈め、光点は残す。
+      */
+      opacity: 0.72;
+      filter: brightness(0.72) contrast(1.5) saturate(1.05);
+    }
+
+    /*
+      後から取得する写真は、デコードが済んでから静かに現れる。
+      取得前の img（src なし）は描かない。壊れた画像の枠を出さないため。
+    */
+    .backdrop__image {
+      transition: opacity var(--dur-slow) var(--ease-out);
+    }
+
+    .backdrop__image[data-backdrop-pending] {
+      opacity: 0;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .backdrop__image {
+        transition: none;
+      }
+    }
+
+    /*
+      画面下端の暗がり。トップではヒーローのスクロール誘導の地になり、
+      他のページでは左右に見える夜景の足元を締める。
+      ビューポートに固定しているので、スクロールしても継ぎ目は出ない。
+    */
+    .backdrop::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(
+        to top,
+        var(--c-void) 0%,
+        color-mix(in srgb, var(--c-void) 45%, transparent) 30%,
+        transparent 58%
+      );
+    }
+
+    /*
+      固定背景はスクロールと画面のズレを生む＝視差表現にあたるため、
+      reduced-motion では固定をやめ、先頭の1画面ぶんだけページと一緒に流す。
+      それより下は地の色（body）になる。境目が線にならないよう下端を溶かす。
+    */
+    @media (prefers-reduced-motion: reduce) {
+      .backdrop {
+        position: absolute;
+        bottom: auto;
+        height: 100svh;
+        mask-image: linear-gradient(to bottom, #000 70%, transparent);
+      }
+    }
+  }
+</style>

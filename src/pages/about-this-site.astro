@@ -222,7 +222,7 @@ const measuredAt = new Date(metrics.measuredAt).toLocaleString('ja-JP', {
   ]}
 >
   <article class="about">
-    <header class="about__header">
+    <header class="about__header card">
       <h1 class="about__title font-display">ABOUT THIS SITE</h1>
       {/* ファーストビューの和文。ext の到着を待たせないため core に含める（scripts/subset-fonts.mjs）*/}
       <p class="about__lead" data-font-core>
@@ -231,7 +231,7 @@ const measuredAt = new Date(metrics.measuredAt).toLocaleString('ja-JP', {
       </p>
     </header>
 
-    <section class="about__section" aria-labelledby="metrics-heading">
+    <section class="about__section card" aria-labelledby="metrics-heading">
       <h2 id="metrics-heading" class="about__heading">実測値</h2>
       <p class="about__measured font-mono">
         最終計測: {measuredAt} / {metrics.environment}
@@ -300,7 +300,7 @@ const measuredAt = new Date(metrics.measuredAt).toLocaleString('ja-JP', {
       </p>
     </section>
 
-    <section class="about__section" aria-labelledby="stack-heading">
+    <section class="about__section card" aria-labelledby="stack-heading">
       <h2 id="stack-heading" class="about__heading">技術スタック</h2>
       <p class="about__body">
         何を使ったかは <code class="font-mono">package.json</code> を見れば分かります。
@@ -324,7 +324,7 @@ const measuredAt = new Date(metrics.measuredAt).toLocaleString('ja-JP', {
       }
     </section>
 
-    <section class="about__section" aria-labelledby="craft-heading">
+    <section class="about__section card" aria-labelledby="craft-heading">
       <h2 id="craft-heading" class="about__heading">こだわりと工夫</h2>
       <p class="about__body">
         現在の実装へ至るまでに実際に踏んだ問題と、その対処です。一般論ではなく、
@@ -346,7 +346,7 @@ const measuredAt = new Date(metrics.measuredAt).toLocaleString('ja-JP', {
       </ol>
     </section>
 
-    <section class="about__section" aria-labelledby="seo-heading">
+    <section class="about__section card" aria-labelledby="seo-heading">
       <h2 id="seo-heading" class="about__heading">検索結果での見え方</h2>
       <p class="about__body">
         公開当初、このドメイン名は GitHub のリポジトリ名と同じでした。検索すると、
@@ -383,7 +383,7 @@ const measuredAt = new Date(metrics.measuredAt).toLocaleString('ja-JP', {
       </p>
     </section>
 
-    <section class="about__section" aria-labelledby="demo-heading">
+    <section class="about__section card" aria-labelledby="demo-heading">
       <h2 id="demo-heading" class="about__heading">演出の Before / After</h2>
       <p class="about__body">
         成果物一覧の看板が順に強く点灯し、微光へ落ち着くシーケンスを、その場で操作できます。
@@ -394,17 +394,20 @@ const measuredAt = new Date(metrics.measuredAt).toLocaleString('ja-JP', {
       <IgniteDemo />
     </section>
 
-    <section class="about__section" aria-labelledby="log-heading">
-      <h2 id="log-heading" class="about__heading">意思決定ログ</h2>
-      <p class="about__body">
-        採用した技術より、採用しなかった選択肢のほうが設計を語ります。
-        各エントリには必ず「検討したが選ばなかったもの」を含めています。
-      </p>
+    {/* ログは長いので、節の導入で1枚、エントリ1件で1枚のカードにする */}
+    <section class="about__section about__section--log" aria-labelledby="log-heading">
+      <div class="card">
+        <h2 id="log-heading" class="about__heading">意思決定ログ</h2>
+        <p class="about__body">
+          採用した技術より、採用しなかった選択肢のほうが設計を語ります。
+          各エントリには必ず「検討したが選ばなかったもの」を含めています。
+        </p>
+      </div>
 
       <ol class="log">
         {
           renderedNotes.map(({ note, Content }) => (
-            <li class="log__entry">
+            <li class="log__entry card">
               <article>
                 <p class="log__date font-mono">
                   <time datetime={note.data.date.toISOString()}>
@@ -458,14 +461,22 @@ const measuredAt = new Date(metrics.measuredAt).toLocaleString('ja-JP', {
 
 <style>
   @layer components {
+    /*
+      ページ全体を1枚の面で覆わない。導入・各節・意思決定ログの各件をそれぞれ
+      カード（.card）にし、カードのあいだに夜景を見せる。一段落ごとにはカードにしない。
+      中身の読み幅はカードを入れる前（72ch から左右 space-3 を引いた幅）に保ち、
+      カードの内側の余白はその外に足す。上はヘッダーの帯（夜景）をあけて始める。
+    */
     .about {
-      max-width: 72ch;
-      margin-inline: auto;
-      padding: var(--space-5) var(--space-3) var(--space-6);
+      width: min(
+        72ch - var(--space-3) * 2 + var(--card-pad) * 2,
+        100% - var(--card-gutter) * 2
+      );
+      margin: calc(var(--space-5) + var(--space-3)) auto var(--space-6);
     }
 
     .about__header {
-      margin-bottom: var(--space-6);
+      margin-bottom: var(--space-5);
     }
 
     .about__title {
@@ -479,7 +490,7 @@ const measuredAt = new Date(metrics.measuredAt).toLocaleString('ja-JP', {
     }
 
     .about__section {
-      margin-bottom: var(--space-6);
+      margin-bottom: var(--space-5);
     }
 
     .about__heading {
@@ -693,7 +704,7 @@ const measuredAt = new Date(metrics.measuredAt).toLocaleString('ja-JP', {
     .log {
       display: flex;
       flex-direction: column;
-      gap: var(--space-5);
+      gap: var(--space-4);
       margin-top: var(--space-4);
     }
 

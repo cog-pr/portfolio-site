@@ -13,7 +13,7 @@ const works = await getPublishedWorks();
 ---
 
 <section class="entries" aria-label="主要ページ">
-  <a href="/works/" class="entry__link entry__link--works">
+  <a href="/works/" class="entry__link entry__link--works card">
     <span class="entry__body">
       <span class="entry__label font-mono">SELECTED WORKS</span>
       <span class="entry__title font-display neon">WORKS</span>
@@ -22,7 +22,7 @@ const works = await getPublishedWorks();
     <span class="entry__arrow font-mono" aria-hidden="true">&rarr;</span>
   </a>
 
-  <a href="/about-this-site/" class="entry__link entry__link--about">
+  <a href="/about-this-site/" class="entry__link entry__link--about card">
     <span class="entry__body">
       <span class="entry__label font-mono">DESIGN &amp; ENGINEERING</span>
       <span class="entry__title font-display neon">ABOUT THIS SITE</span>
@@ -34,12 +34,17 @@ const works = await getPublishedWorks();
 
 <style>
   @layer components {
+    /*
+      セクション自体は地を持たない。入口1つを1枚のカードにし（.entry__link.card）、
+      カードのあいだと周りに夜景を見せる。幅はプロフィールのカードとそろえる。
+    */
     .entries {
       position: relative;
       display: grid;
-      gap: var(--space-2);
-      background: var(--c-void);
-      padding: 0 var(--space-3) var(--space-6);
+      gap: var(--space-3);
+      max-width: calc(54rem + var(--card-pad) * 2 + var(--card-gutter) * 2);
+      margin-inline: auto;
+      padding: 0 var(--card-gutter) var(--space-6);
     }
 
     .entry__link {
@@ -49,11 +54,6 @@ const works = await getPublishedWorks();
       align-items: center;
       justify-content: space-between;
       gap: var(--space-3);
-      max-width: 64rem;
-      margin-inline: auto;
-      padding: var(--space-4) var(--space-2);
-      border-top: 1px solid var(--c-facade);
-      border-bottom: 1px solid var(--c-facade);
       transition:
         background var(--dur-base) var(--ease-inout),
         --neon-strength var(--dur-base) var(--ease-inout);

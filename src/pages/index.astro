@@ -1,10 +1,8 @@
 ---
-import { Image } from 'astro:assets';
 import Base from '../layouts/Base.astro';
 import Profile from '../components/profile/Profile.astro';
 import Timeline from '../components/profile/Timeline.astro';
 import WorksEntry from '../components/facade/WorksEntry.astro';
-import heroImage from '../assets/hero.png';
 import { SITE_NAME } from '../lib/site';
 
 /*
@@ -12,6 +10,9 @@ import { SITE_NAME } from '../lib/site';
 
   成果物の一覧は `/works/` に分けた。ここが担うのは
   「誰のサイトか」と「どこに何があるか」の2つだけ。
+
+  ヒーローは夜景（SiteBackdrop）を直接見せる領域。その下は、同じ夜景の上に
+  プロフィール・経歴の各件・入口がそれぞれカードとして載る領域になる。
 */
 ---
 
@@ -20,33 +21,13 @@ import { SITE_NAME } from '../lib/site';
   title={SITE_NAME}
   description="中野広翔（まを / mawo）のポートフォリオ。設計から実装まで手を入れた成果物と、その過程での判断をまとめています。"
   siteJsonLd
+  heroBackdrop
 >
+  {/*
+    写真はサイト共通の背景（SiteBackdrop）を使う。ヒーローは自前の画像を持たず、
+    その背景を直接見せる。同じ写真を2枚重ねない・2回取得しないため。
+  */}
   <section class="hero">
-    {/*
-      背景写真。装飾なので alt=""（読み上げ対象にしない）。
-
-      fetchpriority は **low**。実測するとこのページの LCP要素は画像ではなく
-      ヒーローのテキスト（hero__role）で、画像を high にすると帯域を奪って
-      文字の描画が遅れ、LCP が 1.86s → 2.19s に悪化した。
-      画面には出るが「文字より後でよい」ので優先度を落とす。
-
-      暗く沈めて使うので quality は低くてよい（この暗さでは劣化が見えない）。
-      widths はモバイルが不要に大きい版を取らないための刻み。
-    */}
-    <div class="hero__media" aria-hidden="true">
-      <Image
-        src={heroImage}
-        alt=""
-        widths={[480, 768, 1100, 1600]}
-        sizes="100vw"
-        format="avif"
-        quality={35}
-        loading="eager"
-        fetchpriority="low"
-        class="hero__image"
-      />
-    </div>
-
     <h1 class="hero__title font-display">
       <span class="hero__line" style="--i: 0">Mawo's</span>
       <span class="hero__line" style="--i: 1">Portfolio</span>
@@ -57,6 +38,10 @@ import { SITE_NAME } from '../lib/site';
       <span class="font-mono hero__scroll-label">SCROLL</span>
     </a>
   </section>
+  {/*
+    ここから下は、同じ夜景を背景に残したまま、情報のまとまりごとのカードで読む。
+    セクション自体は地を持たず、カードとカードのあいだから夜景が見える。
+  */}
   <Profile />
   <Timeline />
   <WorksEntry />
@@ -73,75 +58,29 @@ import { SITE_NAME } from '../lib/site';
       gap: var(--space-2);
       min-height: 100svh;
       padding: var(--space-3);
-      /* 画像が来なくても（読み込み失敗・低速時）成立する土台 */
-      background: var(--c-void);
       overflow: hidden;
     }
 
     /*
-      §1.1「闇が主役で、光は例外である」を写真でも守るための処理。
-      色相は殺さない（紫以外の装飾色は許容 — 仕様書 §1.2 の補足）が、
-      明度と面積を落として、光っている部分が画面の一部に留まるようにする。
-    */
-    /*
-      背景はビューポートに固定し、コンテンツ側だけがその上を流れていく。
-      スクロールするとプロフィール（不透明な --c-void）が
-      せり上がってきて、止まったままの夜景を覆い隠す。
+      文字が乗る左側を重点的に暗くするスクリム。
+      文字のコントラスト 4.5:1 以上（§1.3）を写真の上でも確保するため。
+      写真そのものと画面下端の暗がりは SiteBackdrop が持つ。
 
-      position: fixed なので .hero の overflow: hidden では切られない
-      （固定要素の包含ブロックはビューポート）。
+      ヒーローと一緒に流れるので、下端はマスクで溶かす。切り落とすと
+      ヒーローの終わりで左端の夜景に暗い段が付き、下の領域と別の写真に見える。
     */
-    .hero__media {
-      position: fixed;
-      inset: 0;
-      z-index: 0;
-    }
-
-    /*
-      固定背景はスクロールと画面のズレを生む＝視差表現にあたるため、
-      reduced-motion では通常どおりヒーローと一緒に流す（§1.3）。
-    */
-    @media (prefers-reduced-motion: reduce) {
-      .hero__media {
-        position: absolute;
-      }
-    }
-
-    .hero__image {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      /*
-        全体を一律に暗くするとネオンまで潰れ、ただの濁った写真になる。
-        contrast を上げて **暗部だけ黒に沈め、光点は残す**。
-        結果として「画面の大半は闇、光は一部に集中」という §1.1 の構図が
-        写真のままでも成立する。
-      */
-      opacity: 0.72;
-      filter: brightness(0.72) contrast(1.5) saturate(1.05);
-    }
-
-    /*
-      文字が乗る左下方向を重点的に暗くするスクリム。
-      本文コントラスト 4.5:1 以上（§1.3）を写真の上でも確保するため。
-    */
-    .hero__media::after {
+    .hero::before {
       content: '';
       position: absolute;
       inset: 0;
-      background:
-        linear-gradient(
-          to right,
-          color-mix(in srgb, var(--c-void) 92%, transparent) 0%,
-          color-mix(in srgb, var(--c-void) 62%, transparent) 38%,
-          transparent 72%
-        ),
-        linear-gradient(
-          to top,
-          var(--c-void) 0%,
-          color-mix(in srgb, var(--c-void) 45%, transparent) 30%,
-          transparent 58%
-        );
+      pointer-events: none;
+      background: linear-gradient(
+        to right,
+        color-mix(in srgb, var(--c-void) 92%, transparent) 0%,
+        color-mix(in srgb, var(--c-void) 62%, transparent) 38%,
+        transparent 72%
+      );
+      mask-image: linear-gradient(to bottom, #000 65%, transparent);
     }
 
     /* 文字と誘導は画像より前面へ */

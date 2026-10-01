@@ -66,7 +66,7 @@ const timeline = [
             --i で行番号を明示する。デスクトップでは列を左右に振るため、
             指定が無いと自動配置が1行に2件詰めてしまい、段違いにならない。
           */
-          <li class="timeline__item" style={`--i: ${i + 1}`}>
+          <li class="timeline__item card" style={`--i: ${i + 1}`}>
             <time class="timeline__date font-mono" datetime={item.datetime}>
               {item.date}
             </time>
@@ -81,10 +81,13 @@ const timeline = [
 
 <style>
   @layer components {
+    /*
+      セクション自体は地を持たない。経歴1件を1枚のカードにし（.timeline__item.card）、
+      カードとカードのあいだ、線の左右から夜景が見えるようにする。
+    */
     .career {
       position: relative;
-      padding: 0 var(--space-3) var(--space-5);
-      background: var(--c-void);
+      padding: 0 var(--card-gutter) var(--space-5);
     }
 
     .career__inner {
@@ -92,17 +95,30 @@ const timeline = [
       margin-inline: auto;
     }
 
+    /*
+      節の見出しは夜景の上に直接載る。写真の明るい箇所に重なっても読めるよう、
+      字の周りだけを暗くする影を付ける（光らせるためのグローではない）。
+    */
     .career__label {
       color: var(--c-dust);
       font-size: var(--fs-caption);
       font-weight: 400;
       letter-spacing: 0.16em;
       margin-bottom: var(--space-4);
+      text-shadow:
+        0 0 6px var(--c-void),
+        0 0 12px var(--c-void);
     }
 
     /*
       線と節点の位置は、この2つの変数から導く。
       個別に px を書くと、余白を変えたときに節点だけ線から外れる。
+    */
+    /*
+      縦の間隔（row-gap）はカードどうしのあいだ。デスクトップでは1件ごとに
+      独立した行を作る（grid-row: var(--i)）ので、この値がそのまま件と件の間隔になる。
+      夜景が見える隙間は残しつつ、年表を間延びさせない値にする。
+      列のあいだ（column-gap）はデスクトップで --rail が受け持つ。
     */
     .timeline {
       --line-x: 3px; /* 線の中心X（狭い画面では左端） */
@@ -110,11 +126,11 @@ const timeline = [
 
       position: relative;
       display: grid;
-      gap: var(--space-4);
+      row-gap: var(--space-3);
       padding-left: var(--rail);
     }
 
-    /* 線。上下は闇へ溶かす。切り落とすと定規のように見えるため */
+    /* 線。上下は透明へ溶かす。切り落とすと定規のように見えるため */
     .timeline::before {
       content: '';
       position: absolute;
@@ -123,11 +139,15 @@ const timeline = [
       left: var(--line-x);
       width: 1px;
       transform: translateX(-50%);
+      /*
+        線は夜景の上に直接引かれる（カードのあいだを通る）。--c-facade-lit では
+        写真の暗部に沈んで見えなくなったので、ネオンの紫を半分ほど透かした色にする。
+      */
       background: linear-gradient(
         to bottom,
         transparent,
-        var(--c-facade-lit) 6%,
-        var(--c-facade-lit) 94%,
+        color-mix(in srgb, var(--neon-violet) 55%, transparent) 6%,
+        color-mix(in srgb, var(--neon-violet) 55%, transparent) 94%,
         transparent
       );
     }
@@ -137,19 +157,20 @@ const timeline = [
     }
 
     /*
-      節点。プロフィールのスキル欄と同じ「窓明かり」を使い、
-      サイト内で小さく反復させる（§1.1 発光は一点に集める）。
+      節点。プロフィールのスキル欄と同じ「窓明かり」の形を、線の上で灯った窓として置く。
+      夜景の上では消灯した窓（--c-facade-lit）だと見えないので、芯を明るい紫にする。
     */
     .timeline__item::before {
       content: '';
       position: absolute;
-      top: 0.45em;
+      /* カードの内側の余白ぶん下げて、日付の行の高さにそろえる */
+      top: calc(var(--card-pad) + 0.45em);
       left: calc(var(--line-x) - var(--rail) - 2.5px);
       width: 5px;
       height: 7px;
       border-radius: 1px;
-      background: var(--c-facade-lit);
-      box-shadow: 0 0 8px -2px var(--c-signal);
+      background: var(--neon-violet-core);
+      box-shadow: 0 0 8px var(--neon-violet);
     }
 
     /* 日付は補助情報、題は見出し、説明は本文（仕様書 §5.1 (c)） */
@@ -193,9 +214,12 @@ const timeline = [
         grid-row: var(--i);
       }
 
+      /*
+        カードを左右へ振る。カードの中の文字は左揃えのまま
+        （右揃えの和文の段落は、カードの中では行頭がそろわず読みにくい）。
+      */
       .timeline__item:nth-child(odd) {
         grid-column: 1;
-        text-align: right;
       }
 
       .timeline__item:nth-child(even) {

@@ -49,7 +49,7 @@ const skillGroups = [
 ---
 
 <section id="profile" class="profile" aria-labelledby="profile-heading">
-  <div class="profile__inner">
+  <div class="profile__inner card">
     {/* 灯っている窓。中にいるのが本人という見立て */}
     <div class="profile__window">
       <Image
@@ -133,10 +133,13 @@ const skillGroups = [
 
 <style>
   @layer components {
+    /*
+      セクション自体は地を持たない。プロフィール全体（窓・名前・紹介文・スキル・リンク）を
+      1枚のカードに載せ、その外側に夜景を見せる。中をさらにカードに割らない。
+    */
     .profile {
       position: relative;
-      padding: var(--space-6) var(--space-3) var(--space-5);
-      background: var(--c-void);
+      padding: var(--space-6) var(--card-gutter) var(--space-5);
     }
 
     .profile__inner {
@@ -146,9 +149,9 @@ const skillGroups = [
       align-items: start;
       /*
         本文を 46ch で畳んでいるので、器を広く取ると右側が間延びする。
-        窓と本文が一塊に見える幅で止める。
+        窓と本文が一塊に見える幅（中身 54rem）で止める。カードの内側の余白はその外に足す。
       */
-      max-width: 54rem;
+      max-width: calc(54rem + var(--card-pad) * 2);
       margin-inline: auto;
     }
 

@@ -1,0 +1,56 @@
+/*
+  カード。夜景の背景（SiteBackdrop）の上に、意味のある情報のまとまりごとに置く面。
+  仕様書 §1.1 / §5.0。
+
+  ページの3層:
+    1. 夜の都市の写真（ビューポートに固定）
+    2. カード（情報のまとまりごとに1枚）
+    3. 見出し・本文・作品・UI
+
+  粒度は「プロフィール全体で1枚」「経歴1件で1枚」「作品1件で1枚」
+  「長文ページは意味のある読み物の単位で1枚」。一文・一段落・日付・ラベルだけを
+  カードにはしない。カードとカードのあいだから夜景が見えることが要点で、
+  ページ全体を1枚の面で覆わない。
+*/
+@layer components {
+  /*
+    カードの外側の余白（セクションの左右）と、カードの内側の余白。
+    狭い画面ではカードをほぼ画面幅まで広げ、内側の余白も詰めて、
+    本文の幅をカードを入れる前（375px で 327px）と同じに保つ。
+  */
+  :root {
+    --card-gutter: var(--space-3);
+    --card-pad: var(--space-4);
+  }
+
+  @media (max-width: 767px) {
+    :root {
+      --card-gutter: var(--space-1);
+      --card-pad: var(--space-2);
+    }
+  }
+
+  /*
+    輪郭はごく薄い線で示す。背景ではなく、前に置かれた情報の面だと分かる程度。
+    ガラス風にはしない（白い面・大きな影・光沢・強い blur を使わない）。
+
+    blur(3px) は、写真の中の文字（看板の英字）がカード越しに本文の後ろへ透けて
+    読めてしまうのを崩すためだけの弱いぼかし。不透明度 84% のままでは透けた文字が
+    読めた（88% に上げても同じ）。2px では形が残り、3px で色の滲みだけになった。
+  */
+  .card {
+    padding: var(--card-pad);
+    background: color-mix(in srgb, var(--c-card) 84%, transparent);
+    border: 1px solid color-mix(in srgb, var(--c-fluorescent) 10%, transparent);
+    border-radius: var(--radius-card);
+    -webkit-backdrop-filter: blur(3px);
+    backdrop-filter: blur(3px);
+  }
+
+  /* 狭い画面では本文を優先して少し濃くする。背景が消えるほどにはしない */
+  @media (max-width: 767px) {
+    .card {
+      background: color-mix(in srgb, var(--c-card) 90%, transparent);
+    }
+  }
+}

@@ -7,11 +7,15 @@ gsap.registerPlugin(ScrollTrigger);
 
 const PARALLAX_FACTOR = 0.6;
 
-export function initRail(rail: HTMLElement, section: HTMLElement): void {
+/**
+ * パララックスを仕掛け、後始末の関数を返す。
+ * ページ遷移で /works/ を離れるとき、ScrollTrigger とトゥイーンを止める。
+ */
+export function initRail(rail: HTMLElement, section: HTMLElement): () => void {
   // セクションを通過する間に進む距離を、本文（=セクション高）より遅くする。
   const distance = () => section.offsetHeight * (1 - PARALLAX_FACTOR);
 
-  gsap.fromTo(
+  const tween = gsap.fromTo(
     rail,
     { y: () => -distance() / 2 },
     {
@@ -26,4 +30,9 @@ export function initRail(rail: HTMLElement, section: HTMLElement): void {
       },
     }
   );
+
+  return () => {
+    tween.scrollTrigger?.kill();
+    tween.kill();
+  };
 }

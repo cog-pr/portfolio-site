@@ -115,7 +115,7 @@ GSAP（約44KB）と OGL（約14KB）は動的 `import()` で、以下の条件�
 まず **「最初の操作、または読み込み完了から 2.5 秒」まで待って**から、以下の条件を見ます。
 
 - **点灯シーケンス**: 一覧が視界に入る & reduced-motion でない
-- **光害の空**: 上記に加えて `requestIdleCallback` & `saveData` でない
+- **光害の空**: 上記に加えて `requestIdleCallback` & `saveData` でない & 768px 以上（767px 以下は CSS の静的グラデーションだけ）
 - **縦組みレール**: 上記に加えて 768px 以上
 - **点灯デモ**（About ページ）: スライダー操作 or REPLAY クリック時
 

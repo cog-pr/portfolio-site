@@ -51,7 +51,28 @@ function isSoftwareRenderer(gl: WebGLRenderingContext): boolean {
   return /swiftshader|llvmpipe|software|basic render/i.test(name);
 }
 
-export function initSky(container: HTMLElement): void {
+export type Cleanup = () => void;
+
+const noop: Cleanup = () => {};
+
+/*
+  初期化済みの容器。同じ .sky に canvas と描画ループを2つ作らないため。
+  後始末（cleanup）を呼ぶと外れる。
+*/
+const activeContainers = new WeakSet<HTMLElement>();
+
+/**
+ * 光害の空を容器に描き始め、後始末の関数を返す。
+ *
+ * ページ遷移（ClientRouter）で /works/ を離れるとき、呼び出し側（motion/islands.ts）が
+ * この関数を呼ぶ。止めずに放っておくと、DOM から外れた canvas に向けて
+ * requestAnimationFrame と WebGL コンテキストが回り続ける。
+ * 何度呼んでもよい。初期化しなかった場合（ソフトウェア描画・初期化済み）は何もしない関数を返す。
+ */
+export function initSky(container: HTMLElement): Cleanup {
+  // すでにこの容器で描いているなら、二つ目は作らない（後始末は最初の持ち主が持つ）
+  if (activeContainers.has(container)) return noop;
+
   /*
     alpha: true。空は夜景の写真の上（カードの下）に重ねる光だけを描き、
     光のないところは透明にする（地を塗ると夜景を隠してしまう）。
@@ -65,8 +86,10 @@ export function initSky(container: HTMLElement): void {
   // canvas を挿す前に判定し、ソフトウェア描画なら何も足さずに撤退する
   if (isSoftwareRenderer(gl)) {
     gl.getExtension('WEBGL_lose_context')?.loseContext();
-    return;
+    return noop;
   }
+
+  activeContainers.add(container);
 
   gl.canvas.style.display = 'block';
   gl.canvas.style.width = '100%';
@@ -94,6 +117,7 @@ export function initSky(container: HTMLElement): void {
   const start = performance.now();
   let rafId: number | null = null;
   let lastDraw = 0;
+  let disposed = false;
 
   /*
     時間係数が u_time * 0.02 と極端に遅いので、60fps で回す意味がない。
@@ -102,6 +126,7 @@ export function initSky(container: HTMLElement): void {
   const FRAME_INTERVAL_MS = 1000 / 20;
 
   function frame(now: number) {
+    if (disposed) return;
     if (now - lastDraw >= FRAME_INTERVAL_MS) {
       lastDraw = now;
       program.uniforms.u_time.value = (now - start) / 1000;
@@ -111,7 +136,7 @@ export function initSky(container: HTMLElement): void {
   }
 
   function play() {
-    if (rafId === null) rafId = requestAnimationFrame(frame);
+    if (!disposed && rafId === null) rafId = requestAnimationFrame(frame);
   }
 
   function pause() {
@@ -122,10 +147,22 @@ export function initSky(container: HTMLElement): void {
   }
 
   // タブが非アクティブのときは rAF を止める
-  document.addEventListener('visibilitychange', () => {
+  function onVisibilityChange() {
     if (document.hidden) pause();
     else play();
-  });
+  }
+  document.addEventListener('visibilitychange', onVisibilityChange);
 
   play();
+
+  return () => {
+    if (disposed) return;
+    disposed = true;
+    pause();
+    window.removeEventListener('resize', resize);
+    document.removeEventListener('visibilitychange', onVisibilityChange);
+    gl.canvas.remove();
+    gl.getExtension('WEBGL_lose_context')?.loseContext();
+    activeContainers.delete(container);
+  };
 }

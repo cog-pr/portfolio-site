@@ -117,7 +117,8 @@ const timeline = [
     /*
       縦の間隔（row-gap）はカードどうしのあいだ。デスクトップでは1件ごとに
       独立した行を作る（grid-row: var(--i)）ので、この値がそのまま件と件の間隔になる。
-      夜景が見える隙間は残しつつ、年表を間延びさせない値にする。
+      夜景が見える隙間は残しつつ、年表を間延びさせない値にする
+      （縦積みは --space-3、768px 以上は下で --space-2 に詰める）。
       列のあいだ（column-gap）はデスクトップで --rail が受け持つ。
     */
     .timeline {
@@ -201,11 +202,16 @@ const timeline = [
       行番号（--i）を明示しているので、左右どちらの列でも段がずれない。
     */
     @media (min-width: 768px) {
+      /*
+        カードが左右の列へ交互に並ぶので、件と件は斜めに並んで見える。
+        縦積みの --space-3 のままだと段差が大きく年表が間延びするため、一段詰める。
+      */
       .timeline {
         --line-x: 50%;
         --rail: var(--space-5);
 
         grid-template-columns: 1fr 1fr;
+        row-gap: var(--space-2);
         column-gap: var(--rail);
         padding-left: 0;
       }

@@ -91,6 +91,34 @@ const TUBES = [
   // このセクション内のアイランド（看板の点灯 / 光害の空 / 縦組みレール）は
   // まとめて1本のエントリから起動する。コンポーネントごとに <script> を置くと
   // 小さなチャンクが別々のリクエストになり、初期ロードでフォントと帯域を奪い合う。
-  import { initIslands } from '../motion/islands';
-  initIslands();
+  //
+  // ClientRouter では、この <script> は最初に出会ったときに一度しか評価されない。
+  // そのため初期化は Astro のページ遷移のイベントに結び付ける。
+  //   - astro:page-load  … 今のページに一覧があれば仕掛ける（直接開いたときも遷移で来たときも）
+  //   - astro:before-swap … 離れる前に、仕掛けたものをすべて止める
+  // リスナーはモジュールの評価時に一度だけ登録されるので、遷移のたびに増えない。
+  import { initIslands, type Cleanup } from '../motion/islands';
+
+  // いま演出を仕掛けているセクションと、その後始末
+  let active: { section: HTMLElement; cleanup: Cleanup } | null = null;
+
+  function unmount() {
+    active?.cleanup();
+    active = null;
+  }
+
+  function mount() {
+    const section = document.querySelector<HTMLElement>('.works-section');
+    // 同じセクションにはもう仕掛けてある（評価時と astro:page-load の両方から呼ばれるため）
+    if (active && active.section === section) return;
+    unmount();
+    if (section) active = { section, cleanup: initIslands(section) };
+  }
+
+  document.addEventListener('astro:page-load', mount);
+  document.addEventListener('astro:before-swap', unmount);
+
+  // 遷移で初めてこのページに来たとき、評価が astro:page-load の後になることがあるので、
+  // 評価時にも一度呼ぶ（すでに仕掛けてあれば何もしない）。
+  mount();
 </script>

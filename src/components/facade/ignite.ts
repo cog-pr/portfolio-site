@@ -19,25 +19,29 @@ import {
 
 gsap.registerPlugin(ScrollTrigger);
 
-export function initIgnite(): void {
-  const list = document.querySelector<HTMLElement>('.works');
-  if (!list) return;
-
+/**
+ * 点灯シーケンスを仕掛け、後始末の関数を返す。
+ * ページ遷移で /works/ を離れるとき、ScrollTrigger とタイムラインを止める
+ * （DOM から外れた看板に向けて動き続けないように）。
+ */
+export function initIgnite(list: HTMLElement): () => void {
   const titles = Array.from(list.querySelectorAll<HTMLElement>('.sign__title'));
-  if (titles.length === 0) return;
+  if (titles.length === 0) return () => {};
 
   if (prefersReducedMotion()) {
     // stagger を 0 にし、即座に最終状態（＝静的HTML通り）にする
-    return;
+    return () => {};
   }
 
-  ScrollTrigger.create({
+  const timelines: gsap.core.Timeline[] = [];
+
+  const trigger = ScrollTrigger.create({
     trigger: list,
     start: 'top 85%',
     once: true,
     onEnter: () => {
       titles.forEach((el, i) => {
-        gsap
+        const timeline = gsap
           .timeline({ delay: i * IGNITE_STAGGER })
           // 一瞬フル点灯してから静止状態に落ち着く（蛍光灯が安定するまでの挙動）
           .set(el, { '--neon-strength': 0 })
@@ -53,7 +57,14 @@ export function initIgnite(): void {
             // アニメーション後はインラインstyleを外し、CSSの :hover に制御を戻す
             clearProps: '--neon-strength',
           });
+        timelines.push(timeline);
       });
     },
   });
+
+  return () => {
+    trigger.kill();
+    timelines.forEach((timeline) => timeline.kill());
+    timelines.length = 0;
+  };
 }

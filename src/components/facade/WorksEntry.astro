@@ -47,16 +47,47 @@ const works = await getPublishedWorks();
       padding: 0 var(--card-gutter) var(--space-6);
     }
 
+    /*
+      看板の面（色・輪郭・ぼかし）は ::before に描き、看板そのものは透明にする。
+      枠線の幅だけはレイアウトに残し、余白と大きさは .card のままにする。
+    */
     .entry__link {
-      --neon-strength: 0.55;
-
+      position: relative;
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: var(--space-3);
-      transition:
-        background var(--dur-base) var(--ease-inout),
-        --neon-strength var(--dur-base) var(--ease-inout);
+      background: none;
+      border-color: transparent;
+      -webkit-backdrop-filter: none;
+      backdrop-filter: none;
+    }
+
+    /*
+      入口の看板では、ぼかし（backdrop-filter）を持つ要素の中に文字を置かない。
+
+      PC の Edge で、看板の面だけが角丸と輪郭のない四角として文字の上に重なり、
+      ラベル・見出し・矢印が見えなくなる表示崩れが起きた（2026-10-03、実機の画面で確認。
+      発生条件と原因は未確定）。面と文字を別の要素に分け、面が常に文字の後ろに描かれる
+      構造にしておく。色・輪郭・ぼかしの値は .card と共通（card.css）。
+    */
+    .entry__link::before {
+      content: '';
+      position: absolute;
+      inset: -1px; /* 看板の枠線の外側まで。.card の面と同じ範囲になる */
+      border: 1px solid var(--card-line);
+      border-radius: inherit;
+      background: var(--card-surface);
+      -webkit-backdrop-filter: var(--card-blur);
+      backdrop-filter: var(--card-blur);
+      pointer-events: none;
+      transition: background var(--dur-base) var(--ease-inout);
+    }
+
+    /* 文字と矢印を面より手前に描く（位置指定して、::before の後ろに並べる） */
+    .entry__body,
+    .entry__arrow {
+      position: relative;
     }
 
     /* 一覧の多色看板と同じく、入口ごとに管の色を変えて見分けやすくする */
@@ -70,13 +101,10 @@ const works = await getPublishedWorks();
       --neon-core: var(--neon-cyan-core);
     }
 
-    .entry__link:hover,
-    .entry__link:focus-visible {
-      --neon-strength: 1.15;
+    .entry__link:hover::before,
+    .entry__link:focus-visible::before {
       background: var(--c-facade);
-      transition:
-        background var(--dur-fast) var(--ease-out),
-        --neon-strength var(--dur-fast) var(--ease-out);
+      transition: background var(--dur-fast) var(--ease-out);
     }
 
     .entry__body {
@@ -92,10 +120,23 @@ const works = await getPublishedWorks();
       letter-spacing: 0.16em;
     }
 
+    /*
+      発光の強さ（--neon-strength）は見出し自身に持たせ、見出しの中だけで変化させる。
+      看板全体に置くと、ホバーのたびに看板の子孫すべてで継承された値が毎フレーム変わる。
+    */
     .entry__title {
+      --neon-strength: 0.55;
+
       font-size: var(--fs-h1);
       line-height: var(--lh-display);
       overflow-wrap: anywhere;
+      transition: --neon-strength var(--dur-base) var(--ease-inout);
+    }
+
+    .entry__link:hover .entry__title,
+    .entry__link:focus-visible .entry__title {
+      --neon-strength: 1.15;
+      transition: --neon-strength var(--dur-fast) var(--ease-out);
     }
 
     .entry__jp {
@@ -118,7 +159,12 @@ const works = await getPublishedWorks();
     }
 
     @media (prefers-reduced-motion: reduce) {
-      .entry__link,
+      .entry__link::before,
+      .entry__link:hover::before,
+      .entry__link:focus-visible::before,
+      .entry__title,
+      .entry__link:hover .entry__title,
+      .entry__link:focus-visible .entry__title,
       .entry__arrow {
         transition: none;
       }

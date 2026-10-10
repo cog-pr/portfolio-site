@@ -6,12 +6,13 @@
 // （reset, base, components, utilities の順）が崩れてしまう。
 import '../styles/layers.css';
 import '../styles/tokens.css';
-import '../styles/fonts.css';
-import '../styles/fonts-jp.generated.css';
 import '../styles/reset.css';
 import '../styles/base.css';
 import '../styles/neon.css';
 import '../styles/card.css';
+// @font-face だけは別扱い。ページの CSS には混ぜず、文字列として受け取って <head> に置く（下の <style> を参照）
+import fontFaceCss from '../styles/fonts.css?inline';
+import fontFaceJpCss from '../styles/fonts-jp.generated.css?inline';
 import { ClientRouter } from 'astro:transitions';
 import SiteBackdrop from '../components/layout/SiteBackdrop.astro';
 import Header from '../components/layout/Header.astro';
@@ -165,6 +166,19 @@ const jsonLd = {
         <link rel="preload" href={href} as="font" type="font/woff2" crossorigin />
       ))
     }
+    {/*
+      @font-face は、ページごとにインライン化される CSS から切り離し、
+      全ページで中身が同一の <style> として置く。
+
+      ClientRouter は遷移のたびに <head> を次のページのものへ差し替えるが、
+      中身が同一の <style> は差し替えずに残す。ページの CSS は1ページごとに中身が違うため、
+      そこに @font-face を混ぜておくと遷移のたびに全書体が作り直され、
+      フォントの再検証（304）が返るまで見出しや本文が代替書体で組まれていた
+      （本番の実測で、再検証は毎遷移 0.05〜2.6 秒）。分けておけば遷移後もフォントがそのまま使われる。
+      unicode-range の順序（fonts-jp.generated.css 参照）を保つため、連結の順は変えないこと。
+      上の preload より前に置かないこと。preload を HTML のなるべく早い位置で見つけさせるため。
+    */}
+    <style is:inline set:html={fontFaceCss + fontFaceJpCss} />
     {
       siteJsonLd && (
         <script

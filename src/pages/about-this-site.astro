@@ -455,8 +455,34 @@ const measuredAt = new Date(metrics.measuredAt).toLocaleString('ja-JP', {
 <script>
   // 意思決定ログは縦に長いため、エントリ単位で控えめにリビールする。
   // 署名要素（成果物のネオン看板）より目立たせないこと（§10）。
+  //
+  // ClientRouter では、この <script> は最初に出会ったときに一度しか評価されない。
+  // そのため astro:page-load で今のページのログに仕掛け、astro:before-swap で外す
+  // （WorksList.astro と同じ形）。リスナーは評価時に一度だけ登録されるので、遷移のたびに増えない。
   import { initReveal } from '../components/motion/reveal';
-  initReveal('.log__entry');
+
+  // いまリビールを仕掛けているログと、その後始末
+  let active: { log: HTMLElement; cleanup: () => void } | null = null;
+
+  function unmount() {
+    active?.cleanup();
+    active = null;
+  }
+
+  function mount() {
+    const log = document.querySelector<HTMLElement>('.log');
+    // 同じログにはもう仕掛けてある（評価時と astro:page-load の両方から呼ばれるため）
+    if (active && active.log === log) return;
+    unmount();
+    if (log) active = { log, cleanup: initReveal('.log__entry', log) };
+  }
+
+  document.addEventListener('astro:page-load', mount);
+  document.addEventListener('astro:before-swap', unmount);
+
+  // 遷移で初めてこのページに来たとき、評価が astro:page-load の後になることがあるので、
+  // 評価時にも一度呼ぶ（すでに仕掛けてあれば何もしない）。
+  mount();
 </script>
 
 <style>

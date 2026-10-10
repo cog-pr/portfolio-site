@@ -14,39 +14,50 @@ export interface DemoTiming {
   duration: number;
 }
 
-export function createDemoPlayer(
-  signs: HTMLElement
-): (values: DemoTiming) => void {
+export interface DemoPlayer {
+  play(values: DemoTiming): void;
+  /** 再生中のタイムラインを止め、看板を静的な微光の状態に戻す（ページを離れるときに呼ぶ） */
+  dispose(): void;
+}
+
+export function createDemoPlayer(signs: HTMLElement): DemoPlayer {
   const titles = Array.from(signs.querySelectorAll<HTMLElement>('[data-demo-sign-title]'));
 
   let timelines: gsap.core.Timeline[] = [];
 
-  return function play({ stagger, duration }) {
-    // 連打・スライダー連続操作で再生が重ならないよう、前回分を止めてから開始する
+  const stop = () => {
     timelines.forEach((tl) => tl.kill());
     timelines = [];
     gsap.set(titles, { clearProps: '--neon-strength' });
+  };
 
-    // 本番の flash 0.14s / settle 0.34s の比率を保ったまま、合計尺だけ変える。
-    const flash = duration * (IGNITE_FLASH_DURATION / IGNITE_TOTAL_DURATION);
-    const settle = duration - flash;
+  return {
+    play({ stagger, duration }) {
+      // 連打・スライダー連続操作で再生が重ならないよう、前回分を止めてから開始する
+      stop();
 
-    titles.forEach((title, i) => {
-      const tl = gsap
-        .timeline({ delay: i * stagger })
-        .set(title, { '--neon-strength': 0 })
-        .to(title, {
-          '--neon-strength': IGNITE_FLASH_STRENGTH,
-          duration: flash,
-          ease: 'power2.out',
-        })
-        .to(title, {
-          '--neon-strength': IGNITE_RESTING_STRENGTH,
-          duration: settle,
-          ease: 'power2.out',
-          clearProps: '--neon-strength',
-        });
-      timelines.push(tl);
-    });
+      // 本番の flash 0.14s / settle 0.34s の比率を保ったまま、合計尺だけ変える。
+      const flash = duration * (IGNITE_FLASH_DURATION / IGNITE_TOTAL_DURATION);
+      const settle = duration - flash;
+
+      titles.forEach((title, i) => {
+        const tl = gsap
+          .timeline({ delay: i * stagger })
+          .set(title, { '--neon-strength': 0 })
+          .to(title, {
+            '--neon-strength': IGNITE_FLASH_STRENGTH,
+            duration: flash,
+            ease: 'power2.out',
+          })
+          .to(title, {
+            '--neon-strength': IGNITE_RESTING_STRENGTH,
+            duration: settle,
+            ease: 'power2.out',
+            clearProps: '--neon-strength',
+          });
+        timelines.push(tl);
+      });
+    },
+    dispose: stop,
   };
 }

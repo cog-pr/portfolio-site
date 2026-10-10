@@ -37,20 +37,29 @@
     blur(3px) は、写真の中の文字（看板の英字）がカード越しに本文の後ろへ透けて
     読めてしまうのを崩すためだけの弱いぼかし。不透明度 84% のままでは透けた文字が
     読めた（88% に上げても同じ）。2px では形が残り、3px で色の滲みだけになった。
+
+    面の色・輪郭・ぼかしはカスタムプロパティにまとめ、.card と、面を ::before に
+    分けて描くトップの入口（WorksEntry.astro）とで同じ値を使う。
   */
-  .card {
-    padding: var(--card-pad);
-    background: color-mix(in srgb, var(--c-card) 84%, transparent);
-    border: 1px solid color-mix(in srgb, var(--c-fluorescent) 10%, transparent);
-    border-radius: var(--radius-card);
-    -webkit-backdrop-filter: blur(3px);
-    backdrop-filter: blur(3px);
+  :root {
+    --card-surface: color-mix(in srgb, var(--c-card) 84%, transparent);
+    --card-line: color-mix(in srgb, var(--c-fluorescent) 10%, transparent);
+    --card-blur: blur(3px);
   }
 
   /* 狭い画面では本文を優先して少し濃くする。背景が消えるほどにはしない */
   @media (max-width: 767px) {
-    .card {
-      background: color-mix(in srgb, var(--c-card) 90%, transparent);
+    :root {
+      --card-surface: color-mix(in srgb, var(--c-card) 90%, transparent);
     }
+  }
+
+  .card {
+    padding: var(--card-pad);
+    background: var(--card-surface);
+    border: 1px solid var(--card-line);
+    border-radius: var(--radius-card);
+    -webkit-backdrop-filter: var(--card-blur);
+    backdrop-filter: var(--card-blur);
   }
 }

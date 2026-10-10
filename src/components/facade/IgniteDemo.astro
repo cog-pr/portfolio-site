@@ -222,25 +222,31 @@ const TUBES = [
 
 <script>
   // スライダー操作時のみ GSAP を取得する。ページ読み込み時には落とさない。
+  //
+  // ClientRouter では、この <script> は最初に出会ったときに一度しか評価されない。
+  // そのため astro:page-load で今のページのデモに結び付け、astro:before-swap で外す
+  // （WorksList.astro と同じ形）。外すときは、入力・クリック・OS設定の変更のリスナーと、
+  // 再生中の GSAP のタイムラインをすべて止める。
   import { prefersReducedMotion } from '../motion/motionGuard';
   import { IGNITE_STAGGER, IGNITE_TOTAL_DURATION } from './igniteConfig';
+  import type { DemoPlayer } from './igniteDemo';
 
-  const signs = document.querySelector<HTMLElement>('[data-demo-signs]');
-  const replay = document.querySelector<HTMLButtonElement>('[data-demo-replay]');
-  const inputs = document.querySelectorAll<HTMLInputElement>('[data-demo-input]');
-  const motionStatus = document.querySelector<HTMLElement>('[data-demo-motion-status]');
-  const motionPreference = window.matchMedia('(prefers-reduced-motion: reduce)');
-
-  if (signs && replay) {
+  /** デモに操作を結び付け、外すための関数を返す */
+  function setupDemo(signs: HTMLElement, replay: HTMLButtonElement): () => void {
+    const root = signs.closest('.demo') ?? document;
+    const inputs = root.querySelectorAll<HTMLInputElement>('[data-demo-input]');
+    const motionStatus = root.querySelector<HTMLElement>('[data-demo-motion-status]');
+    const motionPreference = window.matchMedia('(prefers-reduced-motion: reduce)');
     const values = { stagger: IGNITE_STAGGER, duration: IGNITE_TOTAL_DURATION };
 
+    let player: DemoPlayer | null = null;
+    let loading = false;
+    let disposed = false;
+
     const syncOutput = (key: string, value: number) => {
-      const out = document.querySelector<HTMLOutputElement>(`[data-demo-out="${key}"]`);
+      const out = root.querySelector<HTMLOutputElement>(`[data-demo-out="${key}"]`);
       if (out) out.textContent = value.toFixed(2);
     };
-
-    let play: ((v: { stagger: number; duration: number }) => void) | null = null;
-    let loading = false;
 
     function syncMotionControls() {
       const reduced = prefersReducedMotion();
@@ -249,42 +255,88 @@ const TUBES = [
         input.disabled = reduced;
         input.setAttribute('aria-describedby', describedBy);
       });
-      replay!.disabled = reduced;
-      replay!.setAttribute('aria-describedby', describedBy);
+      replay.disabled = reduced;
+      replay.setAttribute('aria-describedby', describedBy);
       if (motionStatus) motionStatus.hidden = !reduced;
       return reduced;
     }
 
     async function ensureLoaded() {
-      if (prefersReducedMotion() || play || loading) return;
+      if (prefersReducedMotion() || player || loading) return;
       loading = true;
-      const { createDemoPlayer } = await import('./igniteDemo');
-      play = createDemoPlayer(signs!);
-      loading = false;
+      try {
+        const { createDemoPlayer } = await import('./igniteDemo');
+        // 取得を待つあいだにページを離れていたら、外れた古い看板には何も始めない
+        if (disposed || !signs.isConnected) return;
+        player = createDemoPlayer(signs);
+      } finally {
+        loading = false;
+      }
     }
 
     async function runDemo() {
       // プレイヤー取得後にOS設定が変わった場合も、再生のたびに必ず判定する。
       if (syncMotionControls()) return;
       await ensureLoaded();
-      if (!syncMotionControls()) play?.(values);
+      if (disposed) return;
+      if (!syncMotionControls()) player?.play(values);
     }
 
-    syncMotionControls();
-    motionPreference.addEventListener('change', syncMotionControls);
-
-    inputs.forEach((input) => {
-      input.addEventListener('input', async () => {
-        const key = input.dataset.demoInput!;
-        const value = Number(input.value);
-        values[key as keyof typeof values] = value;
-        syncOutput(key, value);
-        await runDemo();
-      });
-    });
-
-    replay.addEventListener('click', async () => {
+    const onInput = async (event: Event) => {
+      const input = event.currentTarget as HTMLInputElement;
+      const key = input.dataset.demoInput as keyof typeof values;
+      const value = Number(input.value);
+      values[key] = value;
+      syncOutput(key, value);
       await runDemo();
-    });
+    };
+
+    const onReplay = async () => {
+      await runDemo();
+    };
+
+    // 再生中に「動きを減らす」が有効になったら、操作を止めるだけでなく再生中の点灯もその場で止め、
+    // 看板を静的な微光の状態に戻す（操作を無効にしただけでは、走っているタイムラインは最後まで動く）
+    const onMotionChange = () => {
+      if (syncMotionControls()) player?.dispose();
+    };
+
+    syncMotionControls();
+    motionPreference.addEventListener('change', onMotionChange);
+    inputs.forEach((input) => input.addEventListener('input', onInput));
+    replay.addEventListener('click', onReplay);
+
+    return () => {
+      disposed = true;
+      motionPreference.removeEventListener('change', onMotionChange);
+      inputs.forEach((input) => input.removeEventListener('input', onInput));
+      replay.removeEventListener('click', onReplay);
+      player?.dispose();
+      player = null;
+    };
   }
+
+  // いま操作を結び付けているデモと、その後始末
+  let active: { signs: HTMLElement; cleanup: () => void } | null = null;
+
+  function unmount() {
+    active?.cleanup();
+    active = null;
+  }
+
+  function mount() {
+    const signs = document.querySelector<HTMLElement>('[data-demo-signs]');
+    // 同じデモにはもう結び付けてある（評価時と astro:page-load の両方から呼ばれるため）
+    if (active && active.signs === signs) return;
+    unmount();
+    const replay = document.querySelector<HTMLButtonElement>('[data-demo-replay]');
+    if (signs && replay) active = { signs, cleanup: setupDemo(signs, replay) };
+  }
+
+  document.addEventListener('astro:page-load', mount);
+  document.addEventListener('astro:before-swap', unmount);
+
+  // 遷移で初めてこのページに来たとき、評価が astro:page-load の後になることがあるので、
+  // 評価時にも一度呼ぶ（すでに仕掛けてあれば何もしない）。
+  mount();
 </script>

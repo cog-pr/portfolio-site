@@ -287,43 +287,70 @@ const socials = [...SOCIALS, { href: `mailto:${CONTACT_EMAIL}`, label: 'CONTACT'
       - 閉じたときにハンバーガーへフォーカスを戻す
       - リンクを踏んだら閉じる（同一ページ内アンカーでも閉じるように）
     どれも失敗してもメニュー自体は使えるので、失敗時の分岐は持たない。
+
+    ClientRouter（View Transitions）との関係:
+      このスクリプトは最初のページで一度しか評価されないが、ヘッダーの DOM は
+      ページを移るたびに新しいものへ差し替わる。評価時に1回だけ結び付けると、
+      遷移後の新しいメニューでは上の補助が動かず、古い DOM を指すリスナーだけが残る。
+      そこで astro:page-load で今のメニューに結び付け、astro:before-swap で外す。
+      リスナー自体はモジュールの評価時に1回だけ登録するので、遷移のたびに増えない。
+      import を持たないのは、インラインのまま出力させて全ページのリクエストを増やさないため。
   */
-  const menu = document.querySelector<HTMLDetailsElement>('[data-menu]');
+  const lockScroll = (locked: boolean) => {
+    document.documentElement.style.overflow = locked ? 'hidden' : '';
+  };
 
-  if (menu) {
+  /** メニューに補助を結び付け、外すための関数を返す */
+  function setupMenu(menu: HTMLDetailsElement): () => void {
     const button = menu.querySelector('summary');
+    const links = Array.from(menu.querySelectorAll('a'));
 
-    const lockScroll = (locked: boolean) => {
-      document.documentElement.style.overflow = locked ? 'hidden' : '';
-    };
-
-    menu.addEventListener('toggle', () => {
+    const onToggle = () => {
       lockScroll(menu.open);
-      if (button) {
-        button.setAttribute('aria-label', menu.open ? 'メニューを閉じる' : 'メニューを開く');
-      }
-    });
-
-    document.addEventListener('keydown', (e) => {
+      button?.setAttribute('aria-label', menu.open ? 'メニューを閉じる' : 'メニューを開く');
+    };
+    const onKeydown = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && menu.open) {
         menu.open = false;
         button?.focus();
       }
-    });
+    };
+    const onLinkClick = () => {
+      menu.open = false;
+    };
 
-    menu.querySelectorAll('a').forEach((a) => {
-      a.addEventListener('click', () => {
-        menu.open = false;
-      });
-    });
+    menu.addEventListener('toggle', onToggle);
+    document.addEventListener('keydown', onKeydown);
+    links.forEach((a) => a.addEventListener('click', onLinkClick));
 
-    /*
-      View Transitions で別ページへ移ると、スクロールロックが
-      解除されないまま残ることがあるので明示的に戻す。
-    */
-    document.addEventListener('astro:before-swap', () => {
+    return () => {
+      menu.removeEventListener('toggle', onToggle);
+      document.removeEventListener('keydown', onKeydown);
+      links.forEach((a) => a.removeEventListener('click', onLinkClick));
+      // 開いたまま別ページへ移ってもスクロールロックが残らないよう、明示的に戻す
+      // （toggle のリスナーは先に外しているので、ここで直接解除する）
       menu.open = false;
       lockScroll(false);
-    });
+    };
   }
+
+  // いま補助を結び付けているメニューと、その後始末
+  let active: { menu: HTMLDetailsElement; cleanup: () => void } | null = null;
+
+  function unmount() {
+    active?.cleanup();
+    active = null;
+  }
+
+  function mount() {
+    const menu = document.querySelector<HTMLDetailsElement>('[data-menu]');
+    // 同じメニューにはもう結び付けてある（評価時と astro:page-load の両方から呼ばれるため）
+    if (active && active.menu === menu) return;
+    unmount();
+    if (menu) active = { menu, cleanup: setupMenu(menu) };
+  }
+
+  document.addEventListener('astro:page-load', mount);
+  document.addEventListener('astro:before-swap', unmount);
+  mount();
 </script>

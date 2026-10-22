@@ -203,6 +203,80 @@ function toUnicodeRange(text) {
   return parts.join(',');
 }
 
+/*
+  元フォントが実際に収録しているコードポイントの集合を cmap から読む。
+
+  unicode-range は「このファイルがこの文字を持つ」という**宣言**であって保証ではない。
+  元フォントに無い字を要求しても、サブセット結果には入らない。それなのに範囲だけが
+  その字を主張すると、ブラウザは core を選び → 字が無い → 同じ family の全範囲フェイス
+  （ext）へ落ちて、**57KB を無駄に取得する**。
+
+  実際に踏んだ: 経歴に「～」（U+FF5E 全角チルダ）を書いたところ、Zen Kaku Gothic New が
+  この字を持たないため、トップページが ext まで取得して LCP が 1728→2179ms になった。
+  日本語の波ダッシュは「〜」（U+301C）が正しく、そちらは収録されている。
+
+  そこで、サブセットに渡す前に「元フォントに無い字」を落とす。範囲が嘘をつかなくなり、
+  同じ事故が起きなくなる。落とした字はビルドログに出す（表示は環境のフォールバック任せになる）。
+*/
+function fontCoverage(buf) {
+  const numTables = buf.readUInt16BE(4);
+  let cmapOff = 0;
+  for (let i = 0; i < numTables; i++) {
+    const p = 12 + i * 16;
+    if (buf.toString('ascii', p, p + 4) === 'cmap') cmapOff = buf.readUInt32BE(p + 8);
+  }
+  if (!cmapOff) return null;
+
+  // format 12（全平面）を優先し、無ければ format 4（BMP）を使う
+  let best = null;
+  const n = buf.readUInt16BE(cmapOff + 2);
+  for (let i = 0; i < n; i++) {
+    const rec = cmapOff + 4 + i * 8;
+    const off = cmapOff + buf.readUInt32BE(rec + 4);
+    const format = buf.readUInt16BE(off);
+    const score = format === 12 ? 2 : format === 4 ? 1 : 0;
+    if (score > 0 && (!best || score > best.score)) best = { off, format, score };
+  }
+  if (!best) return null;
+
+  const set = new Set();
+  if (best.format === 12) {
+    const groups = buf.readUInt32BE(best.off + 12);
+    for (let i = 0; i < groups; i++) {
+      const g = best.off + 16 + i * 12;
+      const start = buf.readUInt32BE(g);
+      const end = buf.readUInt32BE(g + 4);
+      if (buf.readUInt32BE(g + 8) === 0) continue; // .notdef に落ちる範囲
+      for (let c = start; c <= end; c++) set.add(c);
+    }
+  } else {
+    const segX2 = buf.readUInt16BE(best.off + 6);
+    const endO = best.off + 14;
+    const startO = endO + segX2 + 2;
+    const deltaO = startO + segX2;
+    const rangeO = deltaO + segX2;
+    for (let i = 0; i < segX2 / 2; i++) {
+      const end = buf.readUInt16BE(endO + i * 2);
+      const start = buf.readUInt16BE(startO + i * 2);
+      const delta = buf.readInt16BE(deltaO + i * 2);
+      const ro = buf.readUInt16BE(rangeO + i * 2);
+      if (start === 0xffff) continue;
+      for (let c = start; c <= end; c++) {
+        let gid;
+        if (ro === 0) gid = (c + delta) & 0xffff;
+        else {
+          const gi = rangeO + i * 2 + ro + (c - start) * 2;
+          if (gi + 1 >= buf.length) continue;
+          gid = buf.readUInt16BE(gi);
+          if (gid !== 0) gid = (gid + delta) & 0xffff;
+        }
+        if (gid !== 0) set.add(c);
+      }
+    }
+  }
+  return set;
+}
+
 const distExists = await exists(DIST_FONT_DIR);
 if (distExists) await mkdir(DIST_FONT_DIR, { recursive: true });
 
@@ -210,13 +284,32 @@ let total = 0;
 const emittedRanges = {};
 for (const job of jobs) {
   const inputBuf = await readFile(new URL(job.src, SRC_DIR));
-  const outBuf = await subsetFont(inputBuf, job.text, {
+
+  // 元フォントに無い字は落とす（理由は fontCoverage のコメント）
+  const coverage = fontCoverage(inputBuf);
+  let text = job.text;
+  if (coverage) {
+    const dropped = [...new Set([...job.text])].filter((c) => !coverage.has(c.codePointAt(0)));
+    if (dropped.length > 0) {
+      text = [...job.text].filter((c) => coverage.has(c.codePointAt(0))).join('');
+      // 空白類はグリフが無くても表示に影響しないので知らせない（ログが読めなくなるだけ）
+      const visible = dropped.filter((c) => !/s/u.test(c));
+      if (visible.length > 0) {
+        const shown = visible
+          .map((c) => `${c} (U+${c.codePointAt(0).toString(16).toUpperCase().padStart(4, '0')})`)
+          .join(', ');
+        console.warn(`  警告: ${job.src} に無い文字を除外しました -> ${shown}`);
+      }
+    }
+  }
+
+  const outBuf = await subsetFont(inputBuf, text, {
     targetFormat: 'woff2',
     ...(job.variationAxes ? { variationAxes: job.variationAxes } : {}),
   });
   await writeFile(new URL(job.out, OUT_DIR), outBuf);
   if (distExists) await writeFile(new URL(job.out, DIST_FONT_DIR), outBuf);
-  if (job.emitRangeFor) emittedRanges[job.emitRangeFor] = toUnicodeRange(job.text);
+  if (job.emitRangeFor) emittedRanges[job.emitRangeFor] = toUnicodeRange(text);
   total += outBuf.length;
   console.log(`${job.src} -> ${job.out}: ${(outBuf.length / 1024).toFixed(1)}KB`);
 }

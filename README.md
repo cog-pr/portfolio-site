@@ -117,7 +117,6 @@ GSAP（約44KB）と OGL（約14KB）は動的 `import()` で、以下の条件�
 - **点灯シーケンス**: 一覧が視界に入る & reduced-motion でない
 - **光害の空**: 上記に加えて `requestIdleCallback` & `saveData` でない & 768px 以上（767px 以下は CSS の静的グラデーションだけ）
 - **縦組みレール**: 上記に加えて 768px 以上
-- **点灯デモ**（About ページ）: スライダー操作 or REPLAY クリック時
 
 `prefers-reduced-motion: reduce` のときは、これらのチャンクを**そもそもダウンロードしません**。
 
@@ -193,7 +192,7 @@ GSAP（約44KB）と OGL（約14KB）は動的 `import()` で、以下の条件�
 ```
 src/
 ├── components/
-│   ├── facade/       # 成果物の看板 + 一覧 + トップの入口 + Aboutページ用デモ
+│   ├── facade/       # 成果物の看板 + 一覧 + トップの入口
 │   ├── profile/      # プロフィール（灯っている窓）・経歴
 │   ├── sky/          # 光害の空（OGL + フラグメントシェーダー。一覧の足元に滲む淡い光）
 │   ├── rail/         # 縦組みレール

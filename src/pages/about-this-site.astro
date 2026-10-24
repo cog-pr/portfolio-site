@@ -1,7 +1,6 @@
 ---
 import { getCollection, render } from 'astro:content';
 import Base from '../layouts/Base.astro';
-import IgniteDemo from '../components/facade/IgniteDemo.astro';
 import metrics from '../data/metrics.json';
 
 // 意思決定ログは時系列（古い順）。判断がどう積み上がったかを読ませるため。
@@ -127,6 +126,10 @@ const craft = [
   {
     title: "光の上でもコントラストを実測する",
     body: "グローは背景を明るくするので、文字との比が下がる。ヘッダーのナビが青いネオンの上で 3.30:1 まで落ちていた（基準は 4.5:1）。文字を消した画面と比べて確かめている。",
+  },
+  {
+    title: "点灯の間隔は手で詰める",
+    body: "看板は 0.09 秒ずつずらして点灯させ、1枚あたり 0.14 秒で立ち上げてから 0.34 秒かけて微光へ落とす。速すぎると一斉に光って見え、遅いと焦れる。数式ではなく目で決めた。",
   },
   {
     title: "計測は本番と同じ圧縮条件で行う",
@@ -272,16 +275,6 @@ const measuredAt = new Date(metrics.measuredAt).toLocaleString('ja-JP', {
           ))
         }
       </ol>
-    </section>
-
-    <section class="about__section card" aria-labelledby="demo-heading">
-      <h2 id="demo-heading" class="about__heading">演出の Before / After</h2>
-      <p class="about__body">
-        成果物一覧の看板が順に点灯するシーケンスです。
-        <code class="font-mono">stagger</code>（看板間の遅延）と
-        <code class="font-mono">duration</code>（1枚あたりの尺）を変えて試せます。
-      </p>
-      <IgniteDemo />
     </section>
 
     {/* ログは長いので、節の導入で1枚、エントリ1件で1枚のカードにする */}

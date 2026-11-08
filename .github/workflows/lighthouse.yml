@@ -29,11 +29,19 @@ jobs:
       - name: Build
         run: npm run build:full
 
-      # 予算割れ（lighthouserc.json の assert）でここが失敗し、ビルドが落ちる
+      # 予算割れ（lighthouserc.json の assert）でここが失敗し、ビルドが落ちる。
+      #
+      # @lhci/cli は devDependency として完全固定し、npx で取りに行かない。
+      # Lighthouse の版が変わると同じページから別の数値が出るため
+      # （lighthouse 12.1.0 と 13.6.0 で FCP 1507ms / 603ms。#57、仕様書 §8）、
+      # 計測器は lockfile で固定する。lhci を上げるときは lighthouse も合わせること。
       - name: Run Lighthouse CI
-        run: npx --yes @lhci/cli@0.14.x autorun
+        run: npx lhci autorun
 
-      # 「このサイトについて」ページが読む metrics.json を実測値で更新する
+      # 「このサイトについて」ページが読む metrics.json を更新する。
+      # 自分で測り直さず、上の autorun が .lighthouseci/ に残したレポートを読む。
+      # 公開する数値と、予算割れを判定した数値を同一の計測にするため（#57）。
+      # 必ず「Run Lighthouse CI」の後に置くこと。
       - name: Regenerate metrics.json
         if: github.event_name == 'push'
         run: npm run metrics:build

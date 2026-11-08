@@ -28,6 +28,9 @@ fonts-src/
 
 # Lighthouse CI report artifacts
 .lighthouseci/
+# budget:check の一時ファイル（Lighthouse の設定とレポート）
+.budget-lh-config.json
+.budget-*.json
 
 # Claude Code のローカル設定（各自の環境ごとの許可設定なので共有しない）
 .claude/settings.local.json

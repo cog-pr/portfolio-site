@@ -37,8 +37,9 @@ npm run dev
 | `npm run serve:dist` | 本番同等（gzip）で `dist/` を配信 |
 | `npm run fonts:fetch` | 元フォントの取得 |
 | `npm run fonts:subset` | フォントのサブセット化（要 `dist/`） |
-| `npm run metrics:build` | Lighthouse を実測し `src/data/metrics.json` を更新 |
-| `npm run budget:check` | 4ページ×3回の中央値で §8 の予算を検証 |
+| `npm run metrics:measure` | Lighthouse CI で計測し `src/data/metrics.json` を更新 |
+| `npm run metrics:build` | 直前の計測結果（`.lighthouseci/`）から `src/data/metrics.json` を更新 |
+| `npm run budget:check` | `lighthouserc.json` のしきい値を4ページ×3回の中央値で検証 |
 | `npx astro check` | 型チェック |
 
 ブランド素材の生成は Python（Pillow）を使う別枠のツールです。生成物はコミット済みなので、
@@ -310,6 +311,37 @@ PR ごとに検証されます。**予算割れはビルド失敗**です。達�
 計測は **gzip配信**（`scripts/static-server.mjs`）で行います。`astro preview` は
 無圧縮配信のため、そのまま測ると本番より悪い数値になります。
 
+### 計測条件と計測器は1か所に固定する
+
+公開する数値は、**CI が予算割れを判定したのと同一の計測**です。
+`scripts/build-metrics.mjs` は自分で Lighthouse を回さず、`lhci` が
+`.lighthouseci/` に残したレポートを読んで監査ごとの中央値を取ります。
+
+| 書く場所 | 内容 |
+|---|---|
+| `lighthouserc.json` | 対象ページ・試行回数・計測条件・しきい値。**ここだけ** |
+| `package.json` | `lighthouse` と `@lhci/cli` の版。**完全固定**（`^` も `.x` も付けない） |
+| `scripts/lighthouse-config.mjs` | 上記2つを読むだけ。閾値を持たない |
+
+> **計測器の版を固定しないと公開値が壊れます（2026-11-08）**
+>
+> スクリプトが `npx lighthouse` を版を指定せずに呼んでいたため、Lighthouse 13 の
+> 公開と同時に、CI（`@lhci/cli@0.14.0` 同梱の `lighthouse@12.1.0`）と手元・公開値の
+> 計測器が黙って食い違いました。
+>
+> | | 観測された描画 | 見積もられた FCP | LCP |
+> |---|---|---|---|
+> | lighthouse 12.1.0 | 204ms | 1507ms | 1807ms |
+> | lighthouse 13.6.0 | 203ms | **603ms** | **603ms** |
+>
+> 同じページ・同じ設定・同じバイト数です。`simulate` の FCP / LCP は観測値ではなく
+> **Lantern の見積もり**で、その計算が版ごとに違います。
+> 結果、トップページの LCP を **705ms** と公開しながら、CI は **約1806ms** で判定していました。
+>
+> `lhci` を上げるときは `lighthouse` も同じ版に合わせてください。
+> `budget:check` と `metrics:build` はレポートの版を固定値と照合し、違えば失敗します。
+> なお **FCP と LCP が同値**になったら、この食い違いを疑ってください。
+
 > **`src/data/metrics.json` は CI が所有するファイルです。フィーチャーブランチからコミットしないでください。**
 >
 > main への push ごとに CI が再計測してコミットし返すため、ブランチ側でも
@@ -318,6 +350,10 @@ PR ごとに検証されます。**予算割れはビルド失敗**です。達�
 >
 > 手元で `npm run metrics:build` を回すのは確認目的なら問題ありません。
 > ただしコミットはせず、`git checkout main -- src/data/metrics.json` で戻してください。
+>
+> **例外は JSON の項目を増やしたときだけ**です。`/about-this-site/` が読む項目が
+> 増えると、その項目を持たない `metrics.json` では型チェックが落ちるため、
+> 項目を使うコードと一緒にコミットします。値は次の main 更新で CI が上書きします。
 > 同じ理由で `public/fonts/` と `src/styles/fonts-jp.generated.css` も CI が更新します
 > （こちらはコンテンツ追加時にブランチ側でも更新が必要なので、衝突したら再生成して解決します）。
 

@@ -184,7 +184,8 @@ const num = String(index + 1).padStart(2, '0');
       flex-wrap: wrap;
       gap: 0.4rem 0.5rem;
       margin-top: 0.3rem;
-      font-size: var(--fs-caption);
+      /* 欧文のみ・折り返すので 12px のまま。理由は tokens.css の --fs-caption-mono */
+      font-size: var(--fs-caption-mono);
     }
 
     .sign__tag {

@@ -380,8 +380,8 @@ const accounts = SOCIALS.map((s) => ({
       align-items: center;
       gap: 0.6rem;
       padding: 0.6rem 1.1rem 0.65rem;
-      /* 見比べて決めた 14px（--fs-small 13px と --fs-body 16px のあいだ） */
-      font-size: 0.875rem;
+      /* 見比べて決めた 14px。--fs-small がこの値になったのでトークンを使う（#61） */
+      font-size: var(--fs-small);
       font-weight: 500;
       line-height: 1.4;
       color: var(--c-fluorescent);

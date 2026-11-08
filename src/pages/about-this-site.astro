@@ -172,7 +172,8 @@ const measuredAt = new Date(metrics.measuredAt).toLocaleString('ja-JP', {
     <section class="about__section card" aria-labelledby="metrics-heading">
       <h2 id="metrics-heading" class="about__heading">実測値</h2>
       <p class="about__measured font-mono">
-        最終計測: {measuredAt} / {metrics.environment}
+        最終計測: {measuredAt} / トップページ（{metrics.page}）を {metrics.runs}
+        回測った中央値 / {metrics.environment}
       </p>
 
       <ul class="scores">
@@ -215,10 +216,12 @@ const measuredAt = new Date(metrics.measuredAt).toLocaleString('ja-JP', {
       </table>
 
       <p class="about__note">
-        数値は手打ちではありません。PRごとに Lighthouse で検証し、
-        main が更新されたときに測り直して
+        数値は手打ちではありません。PRごとに Lighthouse CI で検証し、
+        main が更新されたときに
         <code class="font-mono">src/data/metrics.json</code> へ保存した値です。
         予算を割った変更はマージできません。
+        ここに出ている数値は、その<strong>合否を判定したのと同じ計測</strong>です。
+        公開用に測り直してはいません。
       </p>
 
       {/* 守れていない箇所は理由と一緒に書く */}

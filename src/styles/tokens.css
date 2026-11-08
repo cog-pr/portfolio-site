@@ -56,7 +56,7 @@
   --ease-inout: cubic-bezier(0.65, 0, 0.35, 1);
 
   /* --- 角丸 --- */
-  --radius-cell: 2px; /* 窓セル。ほぼ直角 */
+  --radius-cell: 2px; /* 開口部。ほぼ直角。プロフィール画像の窓で使う */
   --radius-panel: 4px; /* カードの中のパネル */
   --radius-card: 10px; /* 夜景の上に置くカード（card.css） */
   --radius-button: 2px; /* ボタン */

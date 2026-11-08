@@ -11,7 +11,7 @@ const works = defineCollection({
       year: z.number(),
       roles: z.array(z.string()), // 例: ['設計', '実装']
       stack: z.array(z.string()), // 例: ['Astro', 'GSAP']
-      summary: z.string().max(120), // 一覧のホバー時に出る一文
+      summary: z.string().max(120), // 看板に常時出す一文（狭い画面では隠す）
       thumbnail: image(), // 看板に表示
       cover: image(), // 詳細ページのヘッダー
       /*

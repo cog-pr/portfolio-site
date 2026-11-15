@@ -1,5 +1,5 @@
 {
-  "measuredAt": "2026-11-08T07:25:46.767Z",
+  "measuredAt": "2026-11-15T22:57:09.872Z",
   "page": "/",
   "runs": 3,
   "lighthouseVersion": "12.1.0",
@@ -11,10 +11,10 @@
     "seo": 100
   },
   "vitals": {
-    "lcpMs": 1805,
+    "lcpMs": 1729,
     "cls": 0,
     "tbtMs": 0,
-    "fcpMs": 1505
+    "fcpMs": 1504
   },
   "budget": {
     "initialJsGzipBytes": 5494,

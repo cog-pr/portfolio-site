@@ -52,11 +52,11 @@ const stack = [
     items: [
       {
         name: 'Astro',
-        note: '静的HTMLを先に出し、必要な演出だけをクライアント側へ載せる。作品と意思決定ログは Markdown の Content Collections として管理し、ビルド時に検証している。',
+        note: '静的HTMLを先に出し、演出だけをクライアントへ載せる。作品とログは Markdown で持ち、ビルド時に検証する。',
       },
       {
         name: 'TypeScript (strict)',
-        note: '演出の中身まで型を通す。React / Vue などのUIランタイムは加えず、Astro コンポーネントと素の TypeScript で実装している。',
+        note: 'UIランタイムは足さない。Astro コンポーネントと素の TypeScript だけで書く。',
       },
     ],
   },
@@ -65,11 +65,11 @@ const stack = [
     items: [
       {
         name: '素のCSS + カスケードレイヤー',
-        note: 'Tailwind は使わない。デザイントークンを一次情報として持ちたかったのと、ユーティリティクラスの羅列ではこのページで説明しづらいため。',
+        note: 'Tailwind は使わない。デザイントークンを一次情報として持つため。',
       },
       {
         name: 'Archivo / Zen Kaku Gothic New / IBM Plex Mono',
-        note: '全てセルフホスト。Google Fonts への実行時接続はしない（third-party接続はLCPを悪化させる）。',
+        note: '全てセルフホスト。Google Fonts へ実行時に接続しない。',
       },
     ],
   },
@@ -78,11 +78,11 @@ const stack = [
     items: [
       {
         name: 'GSAP + ScrollTrigger',
-        note: '看板の点灯シーケンスと縦看板のパララックスに限定して使う。最初の操作か2.5秒経過まで取得を待ち、reduced-motion では取得しない。',
+        note: '看板の点灯と縦看板のパララックスだけ。最初の操作か2.5秒まで取りに行かず、reduced-motion では取得しない。',
       },
       {
         name: 'OGL',
-        note: '背景シェーダー1枚に必要な処理だけを扱える薄い WebGL ラッパー。GPUを使えない環境では初期化せず、CSSの背景を残す。',
+        note: '背景シェーダー1枚のための薄い WebGL ラッパー。GPUが無ければ初期化しない。',
       },
     ],
   },
@@ -91,11 +91,11 @@ const stack = [
     items: [
       {
         name: 'Cloudflare Workers (Static Assets)',
-        note: 'Worker スクリプトを持たないアセットのみの構成。公開URLは mawo.dev に一本化し、PR用のプレビューURLだけを残している。',
+        note: 'Worker スクリプトを持たないアセットのみの構成。公開URLは mawo.dev 一本。',
       },
       {
         name: 'GitHub Actions + Lighthouse CI',
-        note: 'PRでは4ページを計測して予算を検証する。main 更新後はトップを再計測し、このページが読む実測値とフォントのサブセットを自動更新する。',
+        note: 'PRで4ページの予算を検証し、main 更新後はこのページが読む実測値を自動更新する。',
       },
     ],
   },
@@ -108,36 +108,28 @@ const stack = [
 */
 const craft = [
   {
-    title: "GPUが無い環境では背景シェーダーを動かさない",
-    body: "WebGLがCPU描画に落ちると、全画面のシェーダーを毎フレーム解くことになる。CIで Performance 0.71 / TBT 2180ms まで落ちた。描画元を見て初期化をやめ、CSSのグラデーションに任せている。",
+    title: "GPUが無ければ背景シェーダーを動かさない",
+    body: "WebGLがCPU描画に落ちたCIで Performance 0.71 / TBT 2180ms。描画元を見て初期化をやめ、CSSのグラデーションに任せている。",
   },
   {
     title: "欧文は1ウェイトに固定する",
-    body: "可変フォント（20.1KB）もウェイト別2ファイルも、LCPを 1.86s → 2.10s に悪化させた。wdth 80 / wght 700 の単一インスタンス 9.3KB で固定している。",
-  },
-  {
-    title: "和文を入口用と残りに分ける",
-    body: "1ファイルにまとめると、トップがこのページの長文で使う字まで読み込む。unicode-range で core / ext に分割した。境界は実測で決めている。",
+    body: "可変フォント（20.1KB）もウェイト別2ファイルも、LCPを 1.86s → 2.10s に悪化させた。wdth 80 / wght 700 の単一インスタンス 9.3KB で固定。",
   },
   {
     title: "演出は本文を配り終えてから取りに行く",
-    body: "GSAP と OGL は動的 import。さらに最初の操作か2.5秒経過まで、読み込みの判定自体を始めない。先に走らせたときは LCP が 1887〜2036ms の幅で振れた。",
+    body: "GSAP と OGL は動的 import。さらに最初の操作か2.5秒まで判定自体を始めない。先に走らせると LCP が 1887〜2036ms の幅で振れた。",
   },
   {
     title: "光の上でもコントラストを実測する",
-    body: "グローは背景を明るくするので、文字との比が下がる。ヘッダーのナビが青いネオンの上で 3.30:1 まで落ちていた（基準は 4.5:1）。文字を消した画面と比べて確かめている。",
+    body: "グローは背景を明るくするので文字との比が下がる。ヘッダーのナビが青いネオンの上で 3.30:1 まで落ちていた（基準は 4.5:1）。",
   },
   {
     title: "点灯の間隔は手で詰める",
-    body: "看板は 0.09 秒ずつずらして点灯させ、1枚あたり 0.14 秒で立ち上げてから 0.34 秒かけて微光へ落とす。速すぎると一斉に光って見え、遅いと焦れる。数式ではなく目で決めた。",
-  },
-  {
-    title: "計測は本番と同じ圧縮条件で行う",
-    body: "astro preview は無圧縮で配るため、そのまま測ると本番より悪い値が出る。gzip を返す静的サーバーを用意し、手元とCIで同じ条件にしている。",
+    body: "0.09 秒ずつずらし、1枚を 0.14 秒で立ち上げて 0.34 秒で微光へ落とす。速すぎると一斉に光って見え、遅いと焦れる。",
   },
   {
     title: "窓グリッドをやめて看板にした",
-    body: "当初は3:4の窓を敷き詰め、作品名はホバー時だけ出していた。タッチ端末には hover が無く、触るまで中身が分からない。1作品 = 1枚の看板に変え、名前と姿を常に見せている。",
+    body: "当初は窓を敷き詰め、作品名はホバー時だけ出していた。タッチ端末には hover が無く、触るまで中身が分からない。",
   },
 ];
 
@@ -167,8 +159,7 @@ const measuredAt = new Date(metrics.measuredAt).toLocaleString('ja-JP', {
       <h1 class="about__title font-display">ABOUT THIS SITE</h1>
       {/* ファーストビューの和文。ext の到着を待たせないため core に含める（scripts/subset-fonts.mjs）*/}
       <p class="about__lead" data-font-core>
-        派手な演出を持ちながら速度を落とさないこと自体が、このサイトの主張です。
-        実装は変わり続けるため、現在の構成と変えた理由を、数値と一緒に公開します。
+        演出を足しても、速度は落とさない。その構成と、変えた理由の記録です。
       </p>
     </header>
 
@@ -219,28 +210,13 @@ const measuredAt = new Date(metrics.measuredAt).toLocaleString('ja-JP', {
       </table>
 
       <p class="about__note">
-        数値は手打ちではありません。PRごとに Lighthouse CI で検証し、
-        main が更新されたときに
-        <code class="font-mono">src/data/metrics.json</code> へ保存した値です。
-        予算を割った変更はマージできません。
-        ここに出ている数値は、その<strong>合否を判定したのと同じ計測</strong>です。
-        公開用に測り直してはいません。
-      </p>
-
-      {/* 守れていない箇所は理由と一緒に書く */}
-      <p class="about__note">
-        <strong>このページだけ LCP の目標を 2.4s にしています。</strong>
-        律速は HTML の量そのもので、文章を足すとそのぶん遅くなります。
-        内容を削るより数値を公開する方を選びました。他のページは 2.0s のままです。
+        CI が PR ごとに測り、予算を割ればマージできません。
+        出ているのは、その<strong>合否を判定したのと同じ計測</strong>です。
       </p>
     </section>
 
     <section class="about__section card" aria-labelledby="stack-heading">
       <h2 id="stack-heading" class="about__heading">技術スタック</h2>
-      <p class="about__body">
-        何を使ったかは <code class="font-mono">package.json</code> を見れば分かります。
-        ここに書くのは、なぜそれを選んだかです。
-      </p>
 
       {
         stack.map((group) => (
@@ -261,9 +237,6 @@ const measuredAt = new Date(metrics.measuredAt).toLocaleString('ja-JP', {
 
     <section class="about__section card" aria-labelledby="craft-heading">
       <h2 id="craft-heading" class="about__heading">こだわりと工夫</h2>
-      <p class="about__body">
-        実際に踏んだ問題と、その対処です。<strong>このサイトで測って決めたこと</strong>だけを載せています。
-      </p>
 
       <ol class="craft">
         {
@@ -284,10 +257,6 @@ const measuredAt = new Date(metrics.measuredAt).toLocaleString('ja-JP', {
     <section class="about__section about__section--log" aria-labelledby="log-heading">
       <div class="card">
         <h2 id="log-heading" class="about__heading">意思決定ログ</h2>
-        <p class="about__body">
-          採用した技術より、採用しなかった選択肢のほうが設計を語ります。
-          各エントリには必ず「検討したが選ばなかったもの」を含めています。
-        </p>
       </div>
 
       <ol class="log">
@@ -417,7 +386,6 @@ const measuredAt = new Date(metrics.measuredAt).toLocaleString('ja-JP', {
       注記（.about__note）も文章として読ませるので、本文と同じ色と大きさにする。
       小さく暗いのは計測日時のような補助情報（.about__measured）だけ。
     */
-    .about__body,
     .about__note {
       color: var(--c-text);
       margin-block: var(--space-2);

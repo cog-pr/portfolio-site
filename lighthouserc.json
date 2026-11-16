@@ -26,7 +26,7 @@
     "assert": {
       "assertMatrix": [
         {
-          "//": "全ページ共通。LCPだけはページごとに閾値が違うのでここには入れない。",
+          "//": "全ページ共通。",
           "matchingUrlPattern": ".*",
           "assertions": {
             "categories:performance": ["error", { "minScore": 0.95 }],
@@ -34,27 +34,12 @@
             "categories:best-practices": ["warn", { "minScore": 1 }],
             "categories:seo": ["warn", { "minScore": 1 }],
 
+            "largest-contentful-paint": ["error", { "maxNumericValue": 2000 }],
             "cumulative-layout-shift": ["error", { "maxNumericValue": 0.05 }],
             "total-blocking-time": ["error", { "maxNumericValue": 200 }],
 
             "resource-summary:script:size": ["error", { "maxNumericValue": 102400 }],
             "resource-summary:font:size": ["error", { "maxNumericValue": 204800 }]
-          }
-        },
-        {
-          "//": "「このサイトについて」以外。仕様書 §8 の本来の目標値。",
-          "matchingUrlPattern": "^(?!.*about-this-site).*$",
-          "assertions": {
-            "largest-contentful-paint": ["error", { "maxNumericValue": 2000 }]
-          }
-        },
-        {
-          "//": "「このサイトについて」だけ 2400ms。理由は仕様書 §8 の但し書きを参照。",
-          "//2": "HTML文書が大きく、simulated throttlingではFCPの到着が支配的になる。",
-          "//3": "フォント側の対策では改善せず、内容を削るより判断の根拠を公開する方を選んだ。",
-          "matchingUrlPattern": ".*about-this-site.*",
-          "assertions": {
-            "largest-contentful-paint": ["error", { "maxNumericValue": 2400 }]
           }
         }
       ]
